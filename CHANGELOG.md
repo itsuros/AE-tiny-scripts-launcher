@@ -1,27 +1,26 @@
-# Changelog
+# 更新履歴（Changelog）
 
-All notable changes to **AE Tiny Scripts Launcher** will be documented in this file.
+**AE Tiny Scripts Launcher** の主な変更履歴を記載します。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Until the first public release, the project version remains `0.0.0`.
+本ファイルは [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に準拠し、バージョニングには [セマンティックバージョニング](https://semver.org/lang/ja/) を採用しています。
+ファーストリリースまではバージョン `0.0.0` を維持します。
 
 ## [Unreleased] - 0.0.0
 
-### Added
-- **CEP Foundation (`CSXS/manifest.xml`, `.debug`, `js/lib/CSInterface.js`, `jsx/hostscript.jsx`)**:
-  - Adobe After Effects CEP v11 panel configuration with `--enable-nodejs` and `--mixed-context`.
-  - ExtendScript host bridge for running `.jsx`/`.jsxbin`/inline scripts, inspecting active composition/selection snapshots, and enumerating layer property trees.
-  - macOS development installer script (`scripts/install-dev.sh`).
-- **Data Store & GitHub Sync (`js/store.js`, `js/github-sync.js`)**:
-  - Persistent local state (`launcher-state.json` + `localStorage` fallback) with starter items.
-  - GitHub repository recursive tree sync and automatic file classification (`.jsx`/`.jsxbin`, `.expr.js`/`.expr.txt`/`.expr`, `.ffx`).
-  - Manual item addition, editing, deletion, and custom display order management (drag-and-drop and explicit shift controls).
-- **Self Auto-Updater (`js/updater.js`)**:
-  - Semantic version comparison and GitHub Releases API check/download/extract/reload workflow.
-- **Launcher UI & Target Selectors (`index.html`, `css/styles.css`, `js/app.js`)**:
-  - Adaptive dark/light CEP UI with Grid (Icon) and List view toggling, icon sizing, search, type filtering, and reordering controls.
-  - Expression Target Picker UI (Selected Properties, Common Property Presets, Layer Property Tree browser) with Replace/Append/Prepend and Keyframe Handling options.
-  - FFX Target Picker UI (AE Selected Layers, Checked Layers, New Adjustment/Solid/Null Layer) with Time Anchor, Clear Existing Effects, and Transform Keyframe options.
-- **Validation & Documentation (`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `LICENSE`)**:
-  - MIT License, project documentation, and automated Node.js validation test suite.
+### 追加（Added）
+- **CEP 基盤（`CSXS/manifest.xml`, `.debug`, `js/lib/CSInterface.js`, `jsx/hostscript.jsx`）**:
+  - Adobe After Effects CEP v11 パネル構成（`--enable-nodejs` / `--mixed-context` 有効）。
+  - `.jsx` / `.jsxbin` / インラインスクリプト実行、アクティブコンポ・選択レイヤー・選択プロパティ取得、レイヤープロパティツリー列挙を行う ExtendScript ホストブリッジ。
+  - macOS 開発用シンボリックリンク・`PlayerDebugMode` 設定スクリプト（`scripts/install-dev.sh`）。
+- **データストア・GitHub 自動同期（`js/store.js`, `js/github-sync.js`）**:
+  - ローカル永続化（`launcher-state.json` + `localStorage` フォールバック）およびスターターアイテム。
+  - GitHub レポジトリの再帰走査による自動ダウンロードと拡張子ベースの自動種別判定（`.jsx` / `.jsxbin`, `.expr.js` / `.expr.txt` / `.expr`, `.ffx`）。
+  - 手動追加・編集・削除、およびドラッグ＆ドロップ・上下ボタンによるカスタム表示順管理。
+- **本体自動アップデート（`js/updater.js`）**:
+  - セマンティックバージョン比較および GitHub Releases API からのアーカイブ取得・展開・リロード処理。
+- **ランチャー UI & 適用先選択モーダル（`index.html`, `css/styles.css`, `js/app.js`）**:
+  - ホストテーマ追従のダーク/ライト UI、アイコン型（グリッド）/ リスト型表示切替、アイコンサイズ変更、検索・種別フィルタ・並び替え機能。
+  - Expression 適用先選択 UI（選択プロパティ / プリセット / レイヤープロパティツリー）および適用モード・キーフレーム処理オプション。
+  - FFX 適用先選択 UI（AE 選択レイヤー / レイヤー個別選択 / 新規調整レイヤー / 新規平面 / 新規ヌル）および時間基準・既存エフェクト削除・キーフレーム処理オプション。
+- **検証・ドキュメント（`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `LICENSE`）**:
+  - MIT ライセンス、日本語ドキュメント、開発・Git 運用規約、および Node.js 検証テストスイート。

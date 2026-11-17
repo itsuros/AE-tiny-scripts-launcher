@@ -56,6 +56,18 @@ test("index.html references all required scripts and stylesheet", function () {
   );
 });
 
+test("macOS and Windows dev setup scripts exist and reference bundle ID", function () {
+  var sh = fs.readFileSync(path.join(ROOT, "scripts/install-dev.sh"), "utf8");
+  var ps1 = fs.readFileSync(path.join(ROOT, "scripts/install-dev.ps1"), "utf8");
+  var bat = fs.readFileSync(path.join(ROOT, "scripts/install-dev.bat"), "utf8");
+
+  assert.ok(sh.indexOf("com.ae.tinyscripts.launcher") >= 0);
+  assert.ok(ps1.indexOf("com.ae.tinyscripts.launcher") >= 0);
+  assert.ok(ps1.indexOf("PlayerDebugMode") >= 0);
+  assert.ok(ps1.indexOf("Junction") >= 0);
+  assert.ok(bat.indexOf("install-dev.ps1") >= 0);
+});
+
 test("JS and ExtendScript files parse cleanly without syntax errors", function () {
   var files = [
     "js/lib/CSInterface.js",

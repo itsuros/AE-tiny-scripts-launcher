@@ -40,6 +40,8 @@ AE-tiny-scripts-launcher/
 ├── jsx/
 │   └── hostscript.jsx        # After Effects ExtendScript ホストブリッジ
 ├── scripts/
+│   ├── install-dev.bat       # Windows 開発用バッチラッパー（PowerShell 実行）
+│   ├── install-dev.ps1       # Windows 開発用ジャンクション & PlayerDebugMode 設定スクリプト
 │   ├── install-dev.sh        # macOS 開発用シンボリックリンク & PlayerDebugMode 設定スクリプト
 │   └── validate.js           # Node.js 検証・単体テストスイート
 ├── .debug                    # CEP リモートデバッグポート設定 (8088)
@@ -62,6 +64,31 @@ AE-tiny-scripts-launcher/
 2. **Adobe After Effects** を再起動します。
 3. メニューの **ウィンドウ > エクステンション > AE Tiny Scripts Launcher** からパネルを開きます。
 4. （任意）リモートデバッグを行う場合は Chrome 等で `http://localhost:8088` にアクセスします。
+
+---
+
+## 開発環境のセットアップ（Windows）
+
+1. PowerShell またはコマンドプロンプトから Windows 用セットアップスクリプトを実行します（`%APPDATA%` 配下へのジャンクション作成および `HKCU` レジストリ設定のため、**管理者権限は不要**です）。
+   - **PowerShell から実行する場合**:
+     ```powershell
+     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dev.ps1
+     ```
+   - **コマンドプロンプト / エクスプローラーから実行する場合**:
+     ```bat
+     scripts\install-dev.bat
+     ```
+   - **npm スクリプトから実行する場合**:
+     ```bat
+     npm run setup:win
+     ```
+   このスクリプトにより以下が自動設定されます。
+   - リンク先（ジャンクション）: `%APPDATA%\Adobe\CEP\extensions\com.ae.tinyscripts.launcher`
+   - レジストリ（`HKEY_CURRENT_USER\Software\Adobe\CSXS.9` 〜 `CSXS.12`）の `PlayerDebugMode` を `"1"` に設定
+   - リンクを解除したい場合は `.\scripts\install-dev.ps1 -Uninstall` を実行します。
+2. **Adobe After Effects** を再起動します。
+3. メニューの **ウィンドウ > エクステンション > AE Tiny Scripts Launcher** からパネルを開きます。
+4. （任意）リモートデバッグを行う場合は Chrome / Edge 等で `http://localhost:8088` にアクセスします。
 
 ### テストの実行
 

@@ -23,6 +23,11 @@
         </div>
 
         <div class="toolbar-actions">
+          <button id="btn-scan-local" class="icon-btn" title="Scan Local Script Folders">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
           <button id="btn-sync-github" class="icon-btn" title="Sync Scripts from GitHub">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -82,7 +87,7 @@
         </select>
       </div>
 
-      <!-- Filter Chips -->
+      <!-- Filter Chips & Card Scale -->
       <div class="toolbar-row toolbar-filters">
         <div class="filter-pills" id="type-filters">
           <button class="pill active" data-type="all">All</button>
@@ -90,9 +95,16 @@
           <button class="pill" data-type="expression">Expr</button>
           <button class="pill" data-type="ffx">FFX</button>
         </div>
-        <button id="btn-reorder-mode" class="pill pill-outline" title="Toggle explicit reorder controls">
-          ⇅ Reorder
-        </button>
+        <div class="filter-right-controls">
+          <div id="card-scale-control" class="card-scale-control" title="Adjust icon card size">
+            <span class="scale-label-icon">Size</span>
+            <input id="card-scale-slider" type="range" min="55" max="140" step="5" value="100" aria-label="Card Size" />
+            <span id="card-scale-label" class="scale-value">100%</span>
+          </div>
+          <button id="btn-reorder-mode" class="pill pill-outline" title="Toggle explicit reorder controls">
+            ⇅ Reorder
+          </button>
+        </div>
       </div>
     </header>
 
@@ -170,6 +182,15 @@
             <button type="button" id="btn-browse-file" class="btn btn-secondary btn-sm">Browse</button>
           </div>
           <input id="hidden-file-picker" type="file" class="hidden" accept=".jsx,.jsxbin,.ffx,.js,.txt,.expr" />
+        </div>
+
+        <div class="form-group">
+          <label for="item-icon-path">Custom Icon Image <span class="hint">(auto-detected if same-name image exists in same directory)</span></label>
+          <div class="input-with-btn">
+            <input id="item-icon-path" type="text" placeholder="Optional: /path/to/script.png" />
+            <button type="button" id="btn-browse-icon" class="btn btn-secondary btn-sm">Image</button>
+            <button type="button" id="btn-auto-icon" class="btn btn-secondary btn-sm" title="Detect same-name image in file directory">Auto</button>
+          </div>
         </div>
 
         <div class="form-group" id="group-item-code">
@@ -391,6 +412,32 @@
         <button class="icon-btn modal-close" data-close="modal-settings" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- Section 0: Local Script Folders (Multiple Paths) -->
+        <section class="settings-section">
+          <h3>Local Script Folders (Multiple Paths)</h3>
+          <p class="section-desc">Scan one or more local directories for <code>.jsx</code>, <code>.jsxbin</code>, <code>.expr.js</code>, <code>.expr</code>, and <code>.ffx</code> files. Same-name images in the same folder are used as default icons.</p>
+          <div class="input-with-btn">
+            <input id="cfg-local-folder-input" type="text" placeholder="/path/to/your/ae-scripts-folder" />
+            <button type="button" id="btn-browse-local-folder" class="btn btn-secondary btn-sm">Browse</button>
+            <button type="button" id="btn-add-local-folder" class="btn btn-primary btn-sm">Add</button>
+          </div>
+          <div id="cfg-local-folders-list" class="checklist-box"></div>
+          <div class="form-row two-col">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-local-autosync" />
+              <span>Auto-scan local folders on launch</span>
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-local-prune" />
+              <span>Remove items missing from disk</span>
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button type="button" id="btn-settings-scan-local" class="btn btn-secondary btn-sm">Scan Local Folders Now</button>
+            <span id="cfg-last-local-scan" class="hint"></span>
+          </div>
+        </section>
+
         <!-- Section 1: GitHub Scripts Repository -->
         <section class="settings-section">
           <h3>GitHub Scripts Repository Sync</h3>
@@ -459,12 +506,8 @@
           <h3>Appearance</h3>
           <div class="form-row two-col">
             <div class="form-group">
-              <label for="cfg-icon-size">Grid Icon Size</label>
-              <select id="cfg-icon-size">
-                <option value="small">Small (Compact)</option>
-                <option value="medium">Medium</option>
-                <option value="large">Large</option>
-              </select>
+              <label for="cfg-card-scale">Icon Card Scale (<span id="cfg-card-scale-label">100%</span>)</label>
+              <input id="cfg-card-scale" type="range" min="55" max="140" step="5" value="100" />
             </div>
             <div class="form-group">
               <label for="cfg-view-mode">Default View Mode</label>
@@ -485,7 +528,9 @@
 
   <!-- Scripts -->
   <script src="js/lib/CSInterface.js"></script>
+  <script src="js/icon-resolver.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/local-sync.js"></script>
   <script src="js/github-sync.js"></script>
   <script src="js/updater.js"></script>
   <script src="js/target-picker.js"></script>

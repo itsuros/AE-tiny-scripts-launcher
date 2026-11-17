@@ -162,17 +162,45 @@
     return list;
   }
 
+  function resolveItemIconHtml(item) {
+    var iconSvg = ICONS[item.icon] || ICONS.bolt;
+    var customPath = item.customIconPath || "";
+    if (!customPath && item.filePath && typeof IconResolver !== "undefined") {
+      customPath = IconResolver.findSiblingImageFile(item.filePath);
+    }
+    if (customPath && typeof IconResolver !== "undefined") {
+      var imgUrl = IconResolver.toFileUrl(customPath);
+      return {
+        hasCustom: true,
+        html:
+          '<img class="custom-item-icon" src="' +
+          escapeHtml(imgUrl) +
+          '" alt="" onerror="this.parentNode.classList.remove(\'has-custom-icon\');this.parentNode.style.background=this.parentNode.getAttribute(\'data-fallback-bg\');this.style.display=\'none\';this.nextSibling.style.display=\'inline-flex\';" />' +
+          '<span class="fallback-svg-wrap" style="display:none;align-items:center;justify-content:center;">' +
+          iconSvg +
+          "</span>"
+      };
+    }
+    return { hasCustom: false, html: iconSvg };
+  }
+
   function renderItems() {
     var settings = store.state.settings;
     var container = $("items-container");
     var emptyState = $("empty-state");
     var items = getFilteredAndSortedItems();
+    var cardScale = Number(settings.cardScale) || 100;
 
     // Sync toolbar UI controls
     $("btn-view-grid").classList.toggle("active", settings.viewMode === "grid");
     $("btn-view-list").classList.toggle("active", settings.viewMode === "list");
     $("sort-select").value = settings.sortBy;
     $("btn-reorder-mode").classList.toggle("active", uiState.reorderMode);
+    if ($("card-scale-control")) {
+      $("card-scale-control").classList.toggle("hidden", settings.viewMode === "list");
+      $("card-scale-slider").value = cardScale;
+      $("card-scale-label").textContent = cardScale + "%";
+    }
 
     document.querySelectorAll("#type-filters .pill").forEach(function (btn) {
       btn.classList.toggle("active", btn.getAttribute("data-type") === settings.filterType);
@@ -181,9 +209,9 @@
     container.className =
       "items-container " +
       (settings.viewMode === "list" ? "view-list" : "view-grid") +
-      " size-" +
-      (settings.iconSize || "medium") +
+      (cardScale <= 72 ? " card-compact" : "") +
       (uiState.reorderMode ? " reorder-active" : "");
+    container.style.setProperty("--card-scale", String(cardScale / 100));
 
     $("item-count").textContent = items.length + " / " + store.state.items.length + " items";
 
@@ -198,9 +226,17 @@
 
     var html = items
       .map(function (item) {
-        var iconSvg = ICONS[item.icon] || ICONS.bolt;
+        var iconInfo = resolveItemIconHtml(item);
+        var fallbackColor = item.color || "#4f8cff";
+        var iconWrapStyle = iconInfo.hasCustom ? "background:transparent" : "background:" + escapeHtml(fallbackColor);
+        var iconWrapExtra = iconInfo.hasCustom ? " has-custom-icon" : "";
         var typeLabel = item.type === "expression" ? "EXPR" : item.type === "ffx" ? "FFX" : "JSX";
-        var sourceBadge = item.source === "github" ? '<span class="badge badge-github">GH</span>' : "";
+        var sourceBadge =
+          item.source === "github"
+            ? '<span class="badge badge-github">GH</span>'
+            : item.source === "local"
+            ? '<span class="badge badge-local">DIR</span>'
+            : "";
         var reorderBtns =
           '<button class="mini-btn" data-action="move-up" title="Move Up/Left">&#9650;</button>' +
           '<button class="mini-btn" data-action="move-down" title="Move Down/Right">&#9660;</button>';
@@ -218,10 +254,14 @@
             '" title="' +
             escapeHtml(item.description || item.name) +
             '">' +
-            '<div class="list-icon-wrap" style="background:' +
-            escapeHtml(item.color || "#4f8cff") +
+            '<div class="list-icon-wrap' +
+            iconWrapExtra +
+            '" data-fallback-bg="' +
+            escapeHtml(fallbackColor) +
+            '" style="' +
+            iconWrapStyle +
             '">' +
-            iconSvg +
+            iconInfo.html +
             "</div>" +
             '<div class="list-main">' +
             '<div class="list-title-row">' +
@@ -257,10 +297,14 @@
           '<div class="card-hover-actions">' +
           commonActions +
           "</div>" +
-          '<div class="grid-icon-wrap" style="background:' +
-          escapeHtml(item.color || "#4f8cff") +
+          '<div class="grid-icon-wrap' +
+          iconWrapExtra +
+          '" data-fallback-bg="' +
+          escapeHtml(fallbackColor) +
+          '" style="' +
+          iconWrapStyle +
           '">' +
-          iconSvg +
+          iconInfo.html +
           "</div>" +
           '<div class="grid-name">' +
           escapeHtml(item.name) +
@@ -457,6 +501,7 @@
     $("item-icon").value = isEdit ? item.icon || "bolt" : "bolt";
     $("item-description").value = isEdit ? item.description || "" : "";
     $("item-filepath").value = isEdit ? item.filePath || "" : "";
+    $("item-icon-path").value = isEdit ? item.customIconPath || "" : "";
     $("item-code").value = isEdit ? item.code || "" : "";
     $("item-tags").value = isEdit && Array.isArray(item.tags) ? item.tags.join(", ") : "";
     updateItemFormVisibility();
@@ -512,14 +557,119 @@
     } else if (lower.endsWith(".jsx") || lower.endsWith(".jsxbin")) {
       $("item-type").value = "script";
     }
+    if (!$("item-icon-path").value.trim() && typeof IconResolver !== "undefined") {
+      var sibling = IconResolver.findSiblingImageFile(filePath);
+      if (sibling) {
+        $("item-icon-path").value = sibling;
+      }
+    }
     updateItemFormVisibility();
+  }
+
+  function browseIconImage() {
+    if (typeof cep !== "undefined" && cep.fs && cep.fs.showOpenDialog) {
+      var res = cep.fs.showOpenDialog(false, false, "Select Icon Image", "", ["png", "svg", "jpg", "jpeg", "webp", "gif"]);
+      if (res && res.err === 0 && res.data && res.data.length > 0) {
+        $("item-icon-path").value = res.data[0];
+      }
+    }
+  }
+
+  function autoDetectSiblingIcon() {
+    var fp = $("item-filepath").value.trim();
+    if (!fp || typeof IconResolver === "undefined") return;
+    var sibling = IconResolver.findSiblingImageFile(fp);
+    if (sibling) {
+      $("item-icon-path").value = sibling;
+      setStatus("Found sibling icon: " + sibling, "success");
+    } else {
+      setStatus("No same-name image found next to script file.");
+    }
+  }
+
+  // ==================== Local Script Folders Management ====================
+  var tempLocalFolders = [];
+
+  function renderLocalFoldersSettingsList() {
+    var box = $("cfg-local-folders-list");
+    if (!box) return;
+    if (!tempLocalFolders || tempLocalFolders.length === 0) {
+      box.innerHTML = '<div class="checklist-empty">No local folders added yet.</div>';
+      return;
+    }
+    box.innerHTML = tempLocalFolders
+      .map(function (folderPath, idx) {
+        return (
+          '<div class="checklist-item folder-list-row">' +
+          '<span class="folder-list-path" title="' +
+          escapeHtml(folderPath) +
+          '">' +
+          escapeHtml(folderPath) +
+          "</span>" +
+          '<button type="button" class="mini-btn danger" data-remove-folder="' +
+          idx +
+          '" title="Remove Folder">&times;</button>' +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+
+  function runLocalFoldersScan(silent) {
+    var lf = store.state.settings.localFolders || {};
+    var paths = lf.paths || [];
+    if (paths.length === 0) {
+      if (!silent) {
+        setStatus("Add at least one local folder in Settings first.", "error");
+        openSettingsModal();
+      }
+      return;
+    }
+    setStatus("Scanning local script folders...");
+    LocalSync.scanLocalFolders(store)
+      .then(function (summary) {
+        var warn =
+          summary.missingFolders && summary.missingFolders.length > 0
+            ? " (" + summary.missingFolders.length + " folder(s) not found)"
+            : "";
+        setStatus(
+          "Local Scan complete: +" +
+            summary.added +
+            " added, " +
+            summary.updated +
+            " updated (" +
+            summary.total +
+            " found)" +
+            warn,
+          summary.missingFolders && summary.missingFolders.length > 0 ? "error" : "success"
+        );
+        if ($("cfg-last-local-scan")) {
+          $("cfg-last-local-scan").textContent = "Last scan: " + new Date().toLocaleString();
+        }
+      })
+      .catch(function (err) {
+        setStatus("Local Scan failed: " + err.message, "error");
+        if (!silent) {
+          window.alert("Local Folder Scan Error:\n" + err.message);
+        }
+      });
   }
 
   // ==================== Settings, GitHub Sync & Self-Update ====================
   function openSettingsModal() {
     var s = store.state.settings;
+    var lf = s.localFolders || {};
     var gh = s.scriptsRepo || {};
     var up = s.launcherUpdateRepo || {};
+
+    tempLocalFolders = Array.isArray(lf.paths) ? lf.paths.slice() : [];
+    renderLocalFoldersSettingsList();
+    $("cfg-local-folder-input").value = "";
+    $("cfg-local-autosync").checked = lf.autoScanOnLaunch !== false;
+    $("cfg-local-prune").checked = lf.pruneMissing !== false;
+    $("cfg-last-local-scan").textContent = lf.lastScanAt
+      ? "Last scan: " + new Date(lf.lastScanAt).toLocaleString()
+      : "Never scanned";
 
     $("cfg-scripts-repo").value = gh.owner && gh.repo ? gh.owner + "/" + gh.repo : gh.owner || "";
     $("cfg-scripts-branch").value = gh.branch || "main";
@@ -533,7 +683,9 @@
     $("cfg-update-repo").value = up.owner && up.repo ? up.owner + "/" + up.repo : up.repo || "";
     $("cfg-update-autocheck").checked = up.autoCheckOnLaunch !== false;
 
-    $("cfg-icon-size").value = s.iconSize || "medium";
+    var scale = Number(s.cardScale) || 100;
+    $("cfg-card-scale").value = scale;
+    $("cfg-card-scale-label").textContent = scale + "%";
     $("cfg-view-mode").value = s.viewMode || "grid";
 
     $("update-status-box").classList.add("hidden");
@@ -547,8 +699,13 @@
     var updateParsed = GitHubSync.parseRepoInput($("cfg-update-repo").value);
 
     store.updateSettings({
-      iconSize: $("cfg-icon-size").value,
+      cardScale: Number($("cfg-card-scale").value) || 100,
       viewMode: $("cfg-view-mode").value,
+      localFolders: {
+        paths: tempLocalFolders.slice(),
+        autoScanOnLaunch: $("cfg-local-autosync").checked,
+        pruneMissing: $("cfg-local-prune").checked
+      },
       scriptsRepo: {
         owner: scriptsParsed.owner,
         repo: scriptsParsed.repo,
@@ -711,6 +868,13 @@
     $("btn-sync-github").addEventListener("click", function () {
       runGitHubSync(false);
     });
+    $("btn-scan-local").addEventListener("click", function () {
+      runLocalFoldersScan(false);
+    });
+    $("card-scale-slider").addEventListener("input", function (e) {
+      var val = Number(e.target.value) || 100;
+      store.updateSettings({ cardScale: val });
+    });
     $("btn-settings").addEventListener("click", openSettingsModal);
 
     // Close modals
@@ -723,6 +887,8 @@
     // Item Modal Form
     $("item-type").addEventListener("change", updateItemFormVisibility);
     $("btn-browse-file").addEventListener("click", browseLocalFile);
+    $("btn-browse-icon").addEventListener("click", browseIconImage);
+    $("btn-auto-icon").addEventListener("click", autoDetectSiblingIcon);
     $("hidden-file-picker").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -753,6 +919,7 @@
         type: $("item-type").value,
         color: $("item-color").value,
         icon: $("item-icon").value,
+        customIconPath: $("item-icon-path").value.trim(),
         description: $("item-description").value.trim(),
         filePath: $("item-filepath").value.trim(),
         code: $("item-code").value,
@@ -770,6 +937,39 @@
     });
 
     // Settings & Updater Events
+    $("cfg-card-scale").addEventListener("input", function (e) {
+      $("cfg-card-scale-label").textContent = e.target.value + "%";
+    });
+    $("btn-browse-local-folder").addEventListener("click", function () {
+      if (typeof cep !== "undefined" && cep.fs && cep.fs.showOpenDialog) {
+        var res = cep.fs.showOpenDialog(false, true, "Select Scripts Folder", "", []);
+        if (res && res.err === 0 && res.data && res.data.length > 0) {
+          $("cfg-local-folder-input").value = res.data[0];
+        }
+      } else {
+        window.alert("Enter the local folder path in the text box (CEP folder dialog is available inside After Effects).");
+      }
+    });
+    $("btn-add-local-folder").addEventListener("click", function () {
+      var val = $("cfg-local-folder-input").value.trim();
+      if (!val) return;
+      if (tempLocalFolders.indexOf(val) === -1) {
+        tempLocalFolders.push(val);
+        renderLocalFoldersSettingsList();
+      }
+      $("cfg-local-folder-input").value = "";
+    });
+    $("cfg-local-folders-list").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-remove-folder]");
+      if (!btn) return;
+      var idx = Number(btn.getAttribute("data-remove-folder"));
+      tempLocalFolders.splice(idx, 1);
+      renderLocalFoldersSettingsList();
+    });
+    $("btn-settings-scan-local").addEventListener("click", function () {
+      saveSettingsFromModal();
+      runLocalFoldersScan(false);
+    });
     $("btn-save-settings").addEventListener("click", saveSettingsFromModal);
     $("btn-settings-sync-now").addEventListener("click", function () {
       saveSettingsFromModal();
@@ -821,6 +1021,9 @@
     renderItems();
 
     var s = store.state.settings;
+    if (s.localFolders && s.localFolders.autoScanOnLaunch !== false && Array.isArray(s.localFolders.paths) && s.localFolders.paths.length > 0) {
+      runLocalFoldersScan(true);
+    }
     if (s.scriptsRepo && s.scriptsRepo.autoSyncOnLaunch && s.scriptsRepo.owner && s.scriptsRepo.repo) {
       runGitHubSync(true);
     }

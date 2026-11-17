@@ -191,6 +191,14 @@
 
     return fetchJSON(treeUrl, token).then(function (treeData) {
       var tree = Array.isArray(treeData.tree) ? treeData.tree : [];
+      var allBlobPaths = tree
+        .filter(function (n) {
+          return n.type === "blob";
+        })
+        .map(function (n) {
+          return n.path;
+        });
+
       var candidateFiles = tree.filter(function (node) {
         if (node.type !== "blob") return false;
         if (subPath && node.path.indexOf(subPath + "/") !== 0 && node.path !== subPath) {
@@ -202,21 +210,26 @@
       var syncedItems = [];
       var chain = Promise.resolve();
 
+      function buildRawUrl(relPath) {
+        return (
+          "https://raw.githubusercontent.com/" +
+          encodeURIComponent(parsed.owner) +
+          "/" +
+          encodeURIComponent(parsed.repo) +
+          "/" +
+          encodeURIComponent(branch) +
+          "/" +
+          relPath
+            .split("/")
+            .map(encodeURIComponent)
+            .join("/")
+        );
+      }
+
       candidateFiles.forEach(function (fileNode, idx) {
         chain = chain.then(function () {
           var itemType = detectItemTypeFromFilename(fileNode.path);
-          var rawUrl =
-            "https://raw.githubusercontent.com/" +
-            encodeURIComponent(parsed.owner) +
-            "/" +
-            encodeURIComponent(parsed.repo) +
-            "/" +
-            encodeURIComponent(branch) +
-            "/" +
-            fileNode.path
-              .split("/")
-              .map(encodeURIComponent)
-              .join("/");
+          var rawUrl = buildRawUrl(fileNode.path);
 
           onProgress("Downloading (" + (idx + 1) + "/" + candidateFiles.length + "): " + fileNode.path);
 
@@ -230,15 +243,36 @@
                 textCode = Buffer.from(buf).toString("utf8");
               }
             }
-            var baseName = fileNode.path.split("/").pop();
-            syncedItems.push({
-              name: cleanDisplayName(baseName),
-              type: itemType,
-              remotePath: fileNode.path,
-              sha: fileNode.sha,
-              filePath: localPath,
-              code: itemType === "expression" || !localPath ? textCode : "",
-              description: "GitHub: " + parsed.owner + "/" + parsed.repo + " (" + fileNode.path + ")"
+
+            // Check if a sibling image with the same base name exists in the same GitHub directory
+            var siblingImageRel =
+              global.IconResolver && typeof global.IconResolver.findMatchingSiblingEntry === "function"
+                ? global.IconResolver.findMatchingSiblingEntry(allBlobPaths, fileNode.path)
+                : null;
+
+            var iconPromise = Promise.resolve("");
+            if (siblingImageRel) {
+              iconPromise = fetchRawBuffer(buildRawUrl(siblingImageRel), token)
+                .then(function (imgBuf) {
+                  return saveFileLocally(syncDir, siblingImageRel, imgBuf);
+                })
+                .catch(function () {
+                  return "";
+                });
+            }
+
+            return iconPromise.then(function (localIconPath) {
+              var baseName = fileNode.path.split("/").pop();
+              syncedItems.push({
+                name: cleanDisplayName(baseName),
+                type: itemType,
+                remotePath: fileNode.path,
+                sha: fileNode.sha,
+                filePath: localPath,
+                customIconPath: localIconPath || "",
+                code: itemType === "expression" || !localPath ? textCode : "",
+                description: "GitHub: " + parsed.owner + "/" + parsed.repo + " (" + fileNode.path + ")"
+              });
             });
           });
         });

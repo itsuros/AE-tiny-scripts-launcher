@@ -179,10 +179,18 @@
       version: "0.0.0",
       settings: {
         viewMode: "grid", // "grid" (icon view) | "list" (list view)
-        iconSize: "medium", // "small" | "medium" | "large"
+        iconSize: "medium", // "xsmall" | "small" | "medium" | "large"
+        cardScale: 100, // 55..140 percentage scale for whole grid card UI
         filterType: "all", // "all" | "script" | "expression" | "ffx"
-        filterSource: "all", // "all" | "manual" | "github"
+        filterSource: "all", // "all" | "manual" | "github" | "local"
         sortBy: "custom", // "custom" | "name_asc" | "name_desc" | "type"
+        // Local Script Folders Settings
+        localFolders: {
+          paths: [],
+          autoScanOnLaunch: true,
+          pruneMissing: true,
+          lastScanAt: null
+        },
         // GitHub Scripts Repository Settings
         scriptsRepo: {
           owner: "",
@@ -246,6 +254,11 @@
       this.state = {
         version: "0.0.0",
         settings: Object.assign({}, def.settings, loaded.settings || {}, {
+          localFolders: Object.assign(
+            {},
+            def.settings.localFolders,
+            (loaded.settings && loaded.settings.localFolders) || {}
+          ),
           scriptsRepo: Object.assign({}, def.settings.scriptsRepo, (loaded.settings && loaded.settings.scriptsRepo) || {}),
           launcherUpdateRepo: Object.assign(
             {},
@@ -305,6 +318,9 @@
 
   LauncherStore.prototype.updateSettings = function (partial) {
     this.state.settings = Object.assign({}, this.state.settings, partial);
+    if (partial.localFolders) {
+      this.state.settings.localFolders = Object.assign({}, this.state.settings.localFolders, partial.localFolders);
+    }
     if (partial.scriptsRepo) {
       this.state.settings.scriptsRepo = Object.assign({}, this.state.settings.scriptsRepo, partial.scriptsRepo);
     }
@@ -327,6 +343,7 @@
       source: itemData.source || "manual", // "manual" | "github"
       icon: itemData.icon || (itemData.type === "expression" ? "wave" : itemData.type === "ffx" ? "sparkles" : "bolt"),
       color: itemData.color || (itemData.type === "expression" ? "#a855f7" : itemData.type === "ffx" ? "#f59e0b" : "#4f8cff"),
+      customIconPath: itemData.customIconPath || "",
       description: itemData.description || "",
       filePath: itemData.filePath || "",
       code: itemData.code || "",
@@ -442,6 +459,9 @@
         existing.sha = remote.sha || existing.sha;
         existing.icon = remote.icon || existing.icon;
         existing.color = remote.color || existing.color;
+        if (remote.customIconPath !== undefined) {
+          existing.customIconPath = remote.customIconPath;
+        }
         updated++;
       } else {
         this.state.items.push({
@@ -451,6 +471,7 @@
           source: "github",
           icon: remote.icon || (remote.type === "expression" ? "wave" : remote.type === "ffx" ? "sparkles" : "github"),
           color: remote.color || (remote.type === "expression" ? "#a855f7" : remote.type === "ffx" ? "#f59e0b" : "#38bdf8"),
+          customIconPath: remote.customIconPath || "",
           description: remote.description || "Synced from GitHub (" + remote.remotePath + ")",
           filePath: remote.filePath || "",
           code: remote.code || "",
@@ -484,6 +505,81 @@
     this.save();
 
     return { added: added, updated: updated, removed: removed, total: syncedItems.length };
+  };
+
+  /**
+   * Merge items scanned from configured local folders while preserving custom order and manual/GitHub items
+   */
+  LauncherStore.prototype.mergeLocalItems = function (foundItems, removeMissingLocal) {
+    var existingByPath = {};
+    this.state.items.forEach(function (it) {
+      if (it.source === "local" && it.filePath) {
+        existingByPath[it.filePath] = it;
+      }
+    });
+
+    var seenPaths = {};
+    var added = 0;
+    var updated = 0;
+
+    for (var i = 0; i < foundItems.length; i++) {
+      var local = foundItems[i];
+      seenPaths[local.filePath] = true;
+      var existing = existingByPath[local.filePath];
+      if (existing) {
+        existing.name = local.name || existing.name;
+        existing.type = local.type || existing.type;
+        existing.description = local.description !== undefined ? local.description : existing.description;
+        existing.code = local.code !== undefined ? local.code : existing.code;
+        existing.localFolderRoot = local.localFolderRoot || existing.localFolderRoot;
+        if (local.customIconPath !== undefined) {
+          existing.customIconPath = local.customIconPath;
+        }
+        updated++;
+      } else {
+        this.state.items.push({
+          id: "loc-" + Date.now() + "-" + i + "-" + Math.random().toString(36).slice(2, 5),
+          name: local.name,
+          type: local.type || "script",
+          source: "local",
+          icon: local.type === "expression" ? "wave" : local.type === "ffx" ? "sparkles" : "bolt",
+          color: local.type === "expression" ? "#a855f7" : local.type === "ffx" ? "#f59e0b" : "#10b981",
+          customIconPath: local.customIconPath || "",
+          description: local.description || "Local: " + local.filePath,
+          filePath: local.filePath,
+          localFolderRoot: local.localFolderRoot || "",
+          code: local.code || "",
+          defaultTargetPreset: "transform.position",
+          defaultApplyMode: "replace",
+          defaultKeyframeMode: "keep",
+          defaultTargetLayerMode: "selected_layers",
+          defaultTimeMode: "current_time",
+          order: this.state.items.length,
+          tags: ["local"],
+          createdAt: new Date().toISOString()
+        });
+        added++;
+      }
+    }
+
+    var removed = 0;
+    if (removeMissingLocal) {
+      var beforeCount = this.state.items.length;
+      this.state.items = this.state.items.filter(function (it) {
+        if (it.source !== "local") return true;
+        return !!seenPaths[it.filePath];
+      });
+      removed = beforeCount - this.state.items.length;
+    }
+
+    if (!this.state.settings.localFolders) {
+      this.state.settings.localFolders = { paths: [], autoScanOnLaunch: true, pruneMissing: true, lastScanAt: null };
+    }
+    this.state.settings.localFolders.lastScanAt = new Date().toISOString();
+    this.normalizeOrder();
+    this.save();
+
+    return { added: added, updated: updated, removed: removed, total: foundItems.length };
   };
 
   var TARGET_REQUEST_KEY = "ae_tiny_scripts_launcher_pending_target_v1";

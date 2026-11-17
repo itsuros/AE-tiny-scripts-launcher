@@ -8,22 +8,36 @@ var os = require("os");
 var vm = require("vm");
 
 var ROOT = path.resolve(__dirname, "..");
-var passed = 0;
-var failed = 0;
+var testsQueue = [];
 
 function test(name, fn) {
-  try {
-    fn();
-    console.log("PASS:", name);
-    passed++;
-  } catch (err) {
-    console.error("FAIL:", name, "\n ", err.stack || err.message);
-    failed++;
+  testsQueue.push({ name: name, fn: fn });
+}
+
+async function runAllTests() {
+  var passed = 0;
+  var failed = 0;
+  for (var i = 0; i < testsQueue.length; i++) {
+    var t = testsQueue[i];
+    try {
+      await Promise.resolve(t.fn());
+      console.log("PASS:", t.name);
+      passed++;
+    } catch (err) {
+      console.error("FAIL:", t.name, "\n ", err.stack || err.message);
+      failed++;
+    }
+  }
+  console.log("\nSummary: " + passed + " passed, " + failed + " failed.");
+  if (failed > 0) {
+    process.exit(1);
   }
 }
 
 // Load modules in global context
+require(path.join(ROOT, "js/icon-resolver.js"));
 require(path.join(ROOT, "js/store.js"));
+require(path.join(ROOT, "js/local-sync.js"));
 require(path.join(ROOT, "js/github-sync.js"));
 require(path.join(ROOT, "js/updater.js"));
 
@@ -54,7 +68,9 @@ test("index.html and target-picker.html reference all required scripts and style
   [
     "css/styles.css",
     "js/lib/CSInterface.js",
+    "js/icon-resolver.js",
     "js/store.js",
+    "js/local-sync.js",
     "js/github-sync.js",
     "js/updater.js",
     "js/target-picker.js",
@@ -87,7 +103,9 @@ test("macOS and Windows dev setup scripts exist and reference bundle ID", functi
 test("JS and ExtendScript files parse cleanly without syntax errors", function () {
   var files = [
     "js/lib/CSInterface.js",
+    "js/icon-resolver.js",
     "js/store.js",
+    "js/local-sync.js",
     "js/github-sync.js",
     "js/updater.js",
     "js/target-picker.js",
@@ -203,7 +221,79 @@ test("LauncherUpdater compares semantic versions accurately", function () {
   assert.strictEqual(global.LauncherUpdater.compareSemver("0.0.0", "0.0.1"), -1);
 });
 
-console.log("\nSummary: " + passed + " passed, " + failed + " failed.");
-if (failed > 0) {
-  process.exit(1);
-}
+test("IconResolver finds sibling image files and GitHub tree matches", function () {
+  var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ae-launcher-icon-"));
+  try {
+    var scriptA = path.join(tmpDir, "center_anchor.jsx");
+    var iconA = path.join(tmpDir, "center_anchor.png");
+    var exprB = path.join(tmpDir, "wiggle.expr.js");
+    var iconB = path.join(tmpDir, "wiggle.svg");
+    var ffxC = path.join(tmpDir, "glow.ffx");
+
+    fs.writeFileSync(scriptA, "// a", "utf8");
+    fs.writeFileSync(iconA, "png", "utf8");
+    fs.writeFileSync(exprB, "wiggle(2,10);", "utf8");
+    fs.writeFileSync(iconB, "<svg/>", "utf8");
+    fs.writeFileSync(ffxC, "ffx", "utf8");
+
+    assert.strictEqual(global.IconResolver.findSiblingImageFile(scriptA), iconA);
+    assert.strictEqual(global.IconResolver.findSiblingImageFile(exprB), iconB);
+    assert.strictEqual(global.IconResolver.findSiblingImageFile(ffxC), "");
+    assert.ok(global.IconResolver.toFileUrl(iconA).indexOf("file://") === 0);
+
+    var treeMatch = global.IconResolver.findMatchingSiblingEntry(
+      ["scripts/a.jsx", "scripts/a.png", "other/b.png"],
+      "scripts/a.jsx"
+    );
+    assert.strictEqual(treeMatch, "scripts/a.png");
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("LocalSync scans multiple configured local folders and resolves sibling icons", function () {
+  var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ae-launcher-local-"));
+  var dir1 = path.join(tmpDir, "folder1");
+  var dir2 = path.join(tmpDir, "folder2");
+  var sub2 = path.join(dir2, "sub");
+  var dataDir = path.join(tmpDir, "data");
+  fs.mkdirSync(dir1, { recursive: true });
+  fs.mkdirSync(sub2, { recursive: true });
+  fs.mkdirSync(dataDir, { recursive: true });
+
+  fs.writeFileSync(path.join(dir1, "tool_one.jsx"), "alert(1);", "utf8");
+  fs.writeFileSync(path.join(dir1, "tool_one.png"), "fake-png", "utf8");
+  fs.writeFileSync(path.join(sub2, "bounce.expr.txt"), "loopOut();", "utf8");
+  fs.writeFileSync(path.join(sub2, "preset.ffx"), "ffx", "utf8");
+
+  var store = new global.LauncherStore({ dataDir: dataDir });
+  store.updateSettings({
+    cardScale: 65,
+    localFolders: { paths: [dir1, dir2], autoScanOnLaunch: true, pruneMissing: true }
+  });
+
+  return global.LocalSync.scanLocalFolders(store)
+    .then(function (summary) {
+      assert.strictEqual(summary.added, 3);
+      assert.strictEqual(summary.scannedFolderCount, 2);
+
+      var toolOne = store.state.items.find(function (it) {
+        return it.name === "tool one";
+      });
+      assert.ok(toolOne, "tool_one.jsx should be registered");
+      assert.strictEqual(toolOne.source, "local");
+      assert.strictEqual(toolOne.customIconPath, path.join(dir1, "tool_one.png"));
+
+      var bounceExpr = store.state.items.find(function (it) {
+        return it.name === "bounce" && it.type === "expression";
+      });
+      assert.ok(bounceExpr, "bounce.expr.txt should be registered as expression");
+      assert.strictEqual(bounceExpr.code, "loopOut();");
+      assert.strictEqual(store.state.settings.cardScale, 65);
+    })
+    .finally(function () {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+});
+
+runAllTests();

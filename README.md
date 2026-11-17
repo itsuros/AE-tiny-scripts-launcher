@@ -13,7 +13,8 @@
 - **表示順の並び替え**: ドラッグ＆ドロップおよび上下移動ボタン（`⇅ Reorder`）によるカスタム順並び替えのほか、名前順（A-Z / Z-A）・種別順でのソートに対応しています。
 - **別 GitHub レポジトリからのスクリプト自動同期**: 指定した GitHub レポジトリ（`owner/repo`、ブランチ、サブディレクトリ、任意トークン）からスクリプト・エクスプレッション・`.ffx` を自動取得・ダウンロードします。
 - **手動での追加・編集・削除**: GitHub 同期アイテムとは別に、ローカルファイルやインラインの ExtendScript / Expression を手動で登録・編集・削除できます。
-- **Expression / FFX 適用先セレクタ UI**:
+- **Expression / FFX 適用先セレクタ UI（外部フローティングウィンドウ表示）**:
+  - ドッキングされたメインパネルの内側に窮屈に表示されないよう、CEP の独立した `Modeless` ウィンドウ（`com.ae.tinyscripts.launcher.targetpicker`）として CEP パネルの外側に表示します（AE 本体のタイムライン操作を妨げず、選択更新も可能）。
   - **Expression**: 「AE タイムラインで選択中のプロパティ」「共通プロパティプリセット（Position / Scale / Rotation / Opacity / Anchor Point / Time Remap）」「レイヤープロパティツリー検索」から適用先を選択可能です。適用モード（置換 / 末尾追記 / 先頭挿入）やキーフレーム処理（保持 / 現在値で固定して削除 / 全削除）も指定できます。
   - **FFX プリセット**: 「AE で選択中のレイヤー」「コンポ内レイヤーからチェック選択」「新規調整レイヤー」「新規平面」「新規ヌルオブジェクト」から適用先を選べます。適用時間基準（現在時刻 / インポイント / 0:00）、既存エフェクト削除、トランスフォームキーフレーム削除のオプションも備えています。
 - **本体自動アップデート機能**: GitHub Releases API を参照して新しいセマンティックバージョンを検知し、リリースアーカイブのダウンロード・展開・パネル再読み込みを行います。
@@ -33,9 +34,10 @@ AE-tiny-scripts-launcher/
 ├── js/
 │   ├── lib/
 │   │   └── CSInterface.js    # Adobe CEP CSInterface ラッパー（単体プレビュー用モック含む）
-│   ├── app.js                # メイン UI コントローラ＆適用先選択モーダル
+│   ├── app.js                # メイン UI コントローラ
 │   ├── github-sync.js        # GitHub レポジトリ走査・ファイル自動ダウンローダー
 │   ├── store.js              # ローカル永続化（JSON / localStorage）＆並び順管理
+│   ├── target-picker.js      # Expression / FFX 適用先セレクタ共通コントローラ
 │   └── updater.js            # SemVer 対応 GitHub Releases 自動アップデータ
 ├── jsx/
 │   └── hostscript.jsx        # After Effects ExtendScript ホストブリッジ
@@ -44,9 +46,10 @@ AE-tiny-scripts-launcher/
 │   ├── install-dev.ps1       # Windows 開発用ジャンクション & PlayerDebugMode 設定スクリプト
 │   ├── install-dev.sh        # macOS 開発用シンボリックリンク & PlayerDebugMode 設定スクリプト
 │   └── validate.js           # Node.js 検証・単体テストスイート
-├── .debug                    # CEP リモートデバッグポート設定 (8088)
+├── .debug                    # CEP リモートデバッグポート設定 (8088 / 8089)
 ├── AGENTS.md                 # AI エージェント向け開発・コミット規約
-├── index.html                # パネルエントリポイント
+├── index.html                # メインパネルエントリポイント
+├── target-picker.html        # 外部フローティング適用先選択ウィンドウ
 ├── package.json              # パッケージ定義 (version 0.0.0)
 ├── CHANGELOG.md              # 変更履歴
 └── LICENSE                   # MIT ライセンス

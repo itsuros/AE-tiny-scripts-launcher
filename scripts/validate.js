@@ -37,6 +37,9 @@ test("Version 0.0.0 consistency across package.json, manifest.xml, and updater.j
   assert.ok(manifest.indexOf('Version="0.0.0"') >= 0, "manifest extension version must be 0.0.0");
   assert.ok(manifest.indexOf('<Host Name="AEFT"') >= 0, "manifest must target AEFT");
   assert.ok(manifest.indexOf("<Parameter>--enable-nodejs</Parameter>") >= 0, "manifest must enable Node.js");
+  assert.ok(manifest.indexOf("com.ae.tinyscripts.launcher.targetpicker") >= 0, "manifest must declare external targetpicker");
+  assert.ok(manifest.indexOf("<Type>Modeless</Type>") >= 0, "external targetpicker must use Modeless window");
+  assert.ok(manifest.indexOf("<MainPath>./target-picker.html</MainPath>") >= 0, "targetpicker MainPath missing");
 
   assert.strictEqual(global.LauncherUpdater.CURRENT_VERSION, "0.0.0");
 });
@@ -46,14 +49,25 @@ test("LICENSE is MIT", function () {
   assert.ok(lic.indexOf("MIT License") >= 0);
 });
 
-test("index.html references all required scripts and stylesheet", function () {
+test("index.html and target-picker.html reference all required scripts and stylesheet", function () {
   var html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-  ["css/styles.css", "js/lib/CSInterface.js", "js/store.js", "js/github-sync.js", "js/updater.js", "js/app.js"].forEach(
-    function (rel) {
-      assert.ok(html.indexOf(rel) >= 0, "Missing reference in index.html: " + rel);
-      assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
-    }
-  );
+  [
+    "css/styles.css",
+    "js/lib/CSInterface.js",
+    "js/store.js",
+    "js/github-sync.js",
+    "js/updater.js",
+    "js/target-picker.js",
+    "js/app.js"
+  ].forEach(function (rel) {
+    assert.ok(html.indexOf(rel) >= 0, "Missing reference in index.html: " + rel);
+    assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
+  });
+
+  var pickerHtml = fs.readFileSync(path.join(ROOT, "target-picker.html"), "utf8");
+  ["css/styles.css", "js/lib/CSInterface.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {
+    assert.ok(pickerHtml.indexOf(rel) >= 0, "Missing reference in target-picker.html: " + rel);
+  });
 });
 
 test("macOS and Windows dev setup scripts exist and reference bundle ID", function () {
@@ -76,6 +90,7 @@ test("JS and ExtendScript files parse cleanly without syntax errors", function (
     "js/store.js",
     "js/github-sync.js",
     "js/updater.js",
+    "js/target-picker.js",
     "js/app.js",
     "jsx/hostscript.jsx"
   ];
@@ -120,6 +135,12 @@ test("LauncherStore CRUD, custom ordering, and persistence", function () {
     var reloaded = new global.LauncherStore({ dataDir: tmpDir });
     assert.strictEqual(reloaded.state.items[0].id, added.id);
     assert.strictEqual(reloaded.state.items[0].name, "Renamed Script");
+
+    // Pending target request round-trip
+    var savedReq = reloaded.savePendingTargetRequest({ id: "x1", name: "Wiggle", type: "expression" });
+    var loadedReq = reloaded.loadPendingTargetRequest();
+    assert.strictEqual(loadedReq.requestId, savedReq.requestId);
+    assert.strictEqual(loadedReq.item.name, "Wiggle");
 
     // Delete item
     assert.strictEqual(reloaded.deleteItem(added.id), true);

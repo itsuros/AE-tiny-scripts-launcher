@@ -19,8 +19,9 @@
   - 手動追加・編集・削除、およびドラッグ＆ドロップ・上下ボタンによるカスタム表示順管理。
 - **本体自動アップデート（`js/updater.js`）**:
   - セマンティックバージョン比較および GitHub Releases API からのアーカイブ取得・展開・リロード処理。
-- **ランチャー UI & 適用先選択モーダル（`index.html`, `css/styles.css`, `js/app.js`）**:
+- **ランチャー UI & 外部適用先選択ウィンドウ（`index.html`, `target-picker.html`, `css/styles.css`, `js/app.js`, `js/target-picker.js`）**:
   - ホストテーマ追従のダーク/ライト UI、アイコン型（グリッド）/ リスト型表示切替、アイコンサイズ変更、検索・種別フィルタ・並び替え機能。
+  - CEP の `Modeless` サブ拡張（`com.ae.tinyscripts.launcher.targetpicker`）として CEP パネル外に独立表示するフローティング適用先選択ウィンドウを実装。
   - Expression 適用先選択 UI（選択プロパティ / プリセット / レイヤープロパティツリー）および適用モード・キーフレーム処理オプション。
   - FFX 適用先選択 UI（AE 選択レイヤー / レイヤー個別選択 / 新規調整レイヤー / 新規平面 / 新規ヌル）および時間基準・既存エフェクト削除・キーフレーム処理オプション。
 - **検証・ドキュメント（`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `LICENSE`）**:

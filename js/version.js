@@ -9,7 +9,7 @@
   var meta = {
     version: "0.0.0",
     channel: "develop",
-    revision: 26
+    revision: 27
   };
 
   // In CEP Node.js / Node test environments, prefer live version.json from the extension root

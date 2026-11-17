@@ -23,13 +23,13 @@
     }
   }
 
-  function getDataDir() {
+  function getDataDir(customDir) {
     if (hasNode && os && path) {
       var base =
         process.platform === "win32"
           ? process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming")
           : path.join(os.homedir(), "Library", "Application Support");
-      var dir = path.join(base, "AETinyScriptsLauncher");
+      var dir = customDir || path.join(base, "AETinyScriptsLauncher");
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
@@ -43,7 +43,7 @@
       }
       return dir;
     }
-    return "/tmp/AETinyScriptsLauncher";
+    return customDir || "/tmp/AETinyScriptsLauncher";
   }
 
   function getDefaultStarterItems() {
@@ -206,7 +206,8 @@
     };
   }
 
-  function LauncherStore() {
+  function LauncherStore(options) {
+    this.options = options || {};
     this.state = getDefaultState();
     this.listeners = [];
     this.load();
@@ -214,12 +215,12 @@
 
   LauncherStore.prototype.getStateFilePath = function () {
     if (!hasNode) return null;
-    return path.join(getDataDir(), "launcher-state.json");
+    return path.join(getDataDir(this.options.dataDir), "launcher-state.json");
   };
 
   LauncherStore.prototype.getScriptsSyncDir = function () {
     if (!hasNode) return "/tmp/AETinyScriptsLauncher/github_scripts";
-    return path.join(getDataDir(), "github_scripts");
+    return path.join(getDataDir(this.options.dataDir), "github_scripts");
   };
 
   LauncherStore.prototype.load = function () {
@@ -289,13 +290,17 @@
     });
   };
 
+  LauncherStore.prototype.reindexOrder = function () {
+    this.state.items.forEach(function (item, idx) {
+      item.order = idx;
+    });
+  };
+
   LauncherStore.prototype.normalizeOrder = function () {
     this.state.items.sort(function (a, b) {
       return (a.order || 0) - (b.order || 0);
     });
-    this.state.items.forEach(function (item, idx) {
-      item.order = idx;
-    });
+    this.reindexOrder();
   };
 
   LauncherStore.prototype.updateSettings = function (partial) {
@@ -358,7 +363,7 @@
       return it.id !== id;
     });
     if (this.state.items.length !== before) {
-      this.normalizeOrder();
+      this.reindexOrder();
       this.save();
       return true;
     }
@@ -385,7 +390,7 @@
       var insertAt = position === "after" ? toIdx + 1 : toIdx;
       this.state.items.splice(insertAt, 0, moved);
     }
-    this.normalizeOrder();
+    this.reindexOrder();
     this.state.settings.sortBy = "custom";
     this.save();
   };
@@ -404,7 +409,7 @@
     var temp = this.state.items[idx];
     this.state.items[idx] = this.state.items[nextIdx];
     this.state.items[nextIdx] = temp;
-    this.normalizeOrder();
+    this.reindexOrder();
     this.state.settings.sortBy = "custom";
     this.save();
   };

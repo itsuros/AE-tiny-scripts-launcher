@@ -90,8 +90,8 @@ Downloaded files and launcher state are stored locally under:
 ## Git Branching & Release Workflow
 
 - `main`: Production/release branch (initialized with an empty root commit).
-- `develop`: Active integration branch.
-- `feat/*`, `fix/*`, `docs/*`: Feature, bugfix, and documentation branches created off `develop` and merged back into `develop`.
+- `develop`: Long-lived active integration branch (**do not delete**, even after releases).
+- `feat/*`, `fix/*`, `docs/*`: Feature, bugfix, and documentation branches created off `develop`, merged back into `develop`, and deleted after merge.
 - **Release Process**:
   1. Bump the version consistently across `package.json`, `CSXS/manifest.xml`, `js/store.js`, `js/updater.js`, and `CHANGELOG.md`.
   2. Open a Pull Request from `develop` to `main` and merge.

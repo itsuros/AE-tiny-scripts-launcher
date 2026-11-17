@@ -79,16 +79,14 @@
         </div>
       </div>
 
-      <!-- Search (Icon-only toggle) + Sort -->
+      <!-- Always-visible Incremental Search + Sort -->
       <div class="toolbar-row toolbar-search">
-        <button id="btn-toggle-search" class="icon-btn" title="検索" aria-label="検索" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div id="search-input-wrap" class="search-input-wrap">
+          <svg class="search-field-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-        </button>
-        <div id="search-input-wrap" class="search-input-wrap hidden">
-          <input id="search-input" type="search" placeholder="Search scripts, expressions, ffx..." autocomplete="off" />
+          <input id="search-input" type="search" placeholder="Search..." autocomplete="off" aria-label="検索" />
         </div>
         <select id="sort-select" class="compact-select" title="Sort Order">
           <option value="custom">Custom Order</option>

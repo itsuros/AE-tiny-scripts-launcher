@@ -211,9 +211,11 @@
       onStatus("Extracting archive...");
       return new Promise(function (resolve, reject) {
         if (process.platform === "win32") {
+          var psZip = zipFile.replace(/'/g, "''");
+          var psDest = extractDir.replace(/'/g, "''");
           childProcess.execFile(
             "powershell.exe",
-            ["-NoProfile", "-Command", "Expand-Archive -Path '" + zipFile + "' -DestinationPath '" + extractDir + "' -Force"],
+            ["-NoProfile", "-Command", "Expand-Archive -LiteralPath '" + psZip + "' -DestinationPath '" + psDest + "' -Force"],
             function (err) {
               if (err) return reject(err);
               resolve();

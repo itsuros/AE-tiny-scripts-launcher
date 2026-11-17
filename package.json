@@ -9,6 +9,8 @@
     "url": ""
   },
   "scripts": {
-    "test": "node scripts/validate.js"
+    "test": "node scripts/validate.js",
+    "setup:mac": "bash scripts/install-dev.sh",
+    "setup:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-dev.ps1"
   }
 }

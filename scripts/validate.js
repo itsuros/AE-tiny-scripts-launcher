@@ -116,6 +116,7 @@ test("index.html, target-picker.html, and help.html reference required assets an
     css.indexOf('.search-input-wrap input[type="search"]') >= 0,
     "Search input must override global input[type=search] border/outline"
   );
+  assert.ok(css.indexOf(".list-tags-row") >= 0, "List view should use .list-tags-row on second line");
 });
 
 test("macOS and Windows dev setup scripts exist and reference bundle ID", function () {

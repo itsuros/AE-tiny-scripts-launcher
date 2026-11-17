@@ -596,6 +596,14 @@ body {
   font-weight: 500;
 }
 
+.badge-user-tag {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  text-transform: none;
+  font-weight: 400;
+}
+
 .card-hover-actions {
   position: absolute;
   top: 3px;
@@ -680,12 +688,15 @@ body {
 .list-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .list-title-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  min-width: 0;
 }
 
 .list-name {
@@ -694,14 +705,14 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
 }
 
-.list-desc {
-  font-size: 10px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.list-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .list-actions {

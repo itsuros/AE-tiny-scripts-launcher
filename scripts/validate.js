@@ -35,6 +35,7 @@ async function runAllTests() {
 }
 
 // Load modules in global context
+require(path.join(ROOT, "js/version.js"));
 require(path.join(ROOT, "js/icon-resolver.js"));
 require(path.join(ROOT, "js/store.js"));
 require(path.join(ROOT, "js/local-sync.js"));
@@ -56,6 +57,14 @@ test("Version 0.0.0 consistency across package.json, manifest.xml, and updater.j
   assert.ok(manifest.indexOf("<MainPath>./target-picker.html</MainPath>") >= 0, "targetpicker MainPath missing");
 
   assert.strictEqual(global.LauncherUpdater.CURRENT_VERSION, "0.0.0");
+
+  var verJson = JSON.parse(fs.readFileSync(path.join(ROOT, "version.json"), "utf8"));
+  assert.strictEqual(verJson.version, "0.0.0");
+  assert.ok(verJson.channel === "develop" || verJson.channel === "production");
+  assert.ok(typeof verJson.revision === "number" && verJson.revision >= 1);
+  assert.strictEqual(global.AppVersion.version, verJson.version);
+  assert.strictEqual(global.AppVersion.channel, verJson.channel);
+  assert.strictEqual(global.AppVersion.revision, verJson.revision);
 });
 
 test("LICENSE is MIT", function () {
@@ -68,6 +77,7 @@ test("index.html and target-picker.html reference all required scripts and style
   [
     "css/styles.css",
     "js/lib/CSInterface.js",
+    "js/version.js",
     "js/icon-resolver.js",
     "js/store.js",
     "js/local-sync.js",
@@ -81,7 +91,7 @@ test("index.html and target-picker.html reference all required scripts and style
   });
 
   var pickerHtml = fs.readFileSync(path.join(ROOT, "target-picker.html"), "utf8");
-  ["css/styles.css", "js/lib/CSInterface.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {
+  ["css/styles.css", "js/lib/CSInterface.js", "js/version.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {
     assert.ok(pickerHtml.indexOf(rel) >= 0, "Missing reference in target-picker.html: " + rel);
   });
 });
@@ -103,6 +113,7 @@ test("macOS and Windows dev setup scripts exist and reference bundle ID", functi
 test("JS and ExtendScript files parse cleanly without syntax errors", function () {
   var files = [
     "js/lib/CSInterface.js",
+    "js/version.js",
     "js/icon-resolver.js",
     "js/store.js",
     "js/local-sync.js",
@@ -110,6 +121,7 @@ test("JS and ExtendScript files parse cleanly without syntax errors", function (
     "js/updater.js",
     "js/target-picker.js",
     "js/app.js",
+    "scripts/bump-revision.js",
     "jsx/hostscript.jsx"
   ];
   files.forEach(function (rel) {
@@ -219,6 +231,26 @@ test("LauncherUpdater compares semantic versions accurately", function () {
   assert.strictEqual(global.LauncherUpdater.compareSemver("1.0.0", "0.9.9"), 1);
   assert.strictEqual(global.LauncherUpdater.compareSemver("v0.0.0", "0.0.0"), 0);
   assert.strictEqual(global.LauncherUpdater.compareSemver("0.0.0", "0.0.1"), -1);
+});
+
+test("AppVersion formats develop (with revision) and production channels distinctly", function () {
+  var origChannel = global.AppVersion.channel;
+  var origRev = global.AppVersion.revision;
+  try {
+    global.AppVersion.channel = "develop";
+    global.AppVersion.revision = 42;
+    assert.strictEqual(global.AppVersion.isDevelop(), true);
+    assert.strictEqual(global.AppVersion.getDisplayBadge(), "DEV v0.0.0 (rev.42)");
+    assert.strictEqual(global.AppVersion.getShortBadge(), "DEV r42");
+
+    global.AppVersion.channel = "production";
+    assert.strictEqual(global.AppVersion.isProduction(), true);
+    assert.strictEqual(global.AppVersion.getDisplayBadge(), "v0.0.0");
+    assert.strictEqual(global.AppVersion.getShortBadge(), "PROD");
+  } finally {
+    global.AppVersion.channel = origChannel;
+    global.AppVersion.revision = origRev;
+  }
 });
 
 test("IconResolver finds sibling image files and GitHub tree matches", function () {

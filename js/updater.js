@@ -5,7 +5,10 @@
  */
 
 (function (global) {
-  var CURRENT_VERSION = "0.0.0";
+  var appVer = global.AppVersion || { version: "0.0.0", channel: "develop", revision: 0 };
+  var CURRENT_VERSION = appVer.version || "0.0.0";
+  var CURRENT_CHANNEL = appVer.channel || "develop";
+  var CURRENT_REVISION = appVer.revision || 0;
 
   var hasNode = typeof process !== "undefined" && process.versions && !!process.versions.node;
   var fs = null;
@@ -243,6 +246,8 @@
 
   global.LauncherUpdater = {
     CURRENT_VERSION: CURRENT_VERSION,
+    CURRENT_CHANNEL: CURRENT_CHANNEL,
+    CURRENT_REVISION: CURRENT_REVISION,
     parseSemver: parseSemver,
     compareSemver: compareSemver,
     checkForUpdates: checkForUpdates,

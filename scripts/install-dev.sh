@@ -41,4 +41,10 @@ for ver in 9 10 11 12; do
 done
 
 echo "Enabled PlayerDebugMode for CSXS 9-12."
+
+if [ -d "$SRC_DIR/.git" ]; then
+  git -C "$SRC_DIR" config core.hooksPath .githooks || true
+  echo "Configured git core.hooksPath -> .githooks (auto revision bump on develop commits)."
+fi
+
 echo "Setup complete! Restart After Effects and open Window > Extensions > AE Tiny Scripts Launcher."

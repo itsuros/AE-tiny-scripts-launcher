@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -e
+
+# Automatically increment develop revision on every normal commit when channel == "develop"
+# unless version.json is already modified in the staged index.
+
+if [ -f ".git/MERGE_HEAD" ]; then
+  exit 0
+fi
+
+NODE_BIN="$(command -v node || echo /opt/homebrew/bin/node)"
+if [ ! -x "$NODE_BIN" ]; then
+  exit 0
+fi
+
+if git diff --cached --name-only | grep -qx "version.json"; then
+  # version.json was already updated manually in this commit
+  exit 0
+fi
+
+CHANNEL="$("$NODE_BIN" -e "console.log(JSON.parse(require('fs').readFileSync('version.json','utf8')).channel)")"
+if [ "$CHANNEL" = "develop" ]; then
+  "$NODE_BIN" scripts/bump-revision.js >/dev/null
+  git add version.json js/version.js
+fi

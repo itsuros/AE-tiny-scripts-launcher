@@ -26,5 +26,8 @@
   - CEP の `Modeless` サブ拡張（`com.ae.tinyscripts.launcher.targetpicker`）として CEP パネル外に独立表示するフローティング適用先選択ウィンドウを実装。
   - Expression 適用先選択 UI（選択プロパティ / プリセット / レイヤープロパティツリー）および適用モード・キーフレーム処理オプション。
   - FFX 適用先選択 UI（AE 選択レイヤー / レイヤー個別選択 / 新規調整レイヤー / 新規平面 / 新規ヌル）および時間基準・既存エフェクト削除・キーフレーム処理オプション。
+- **開発版リビジョン管理 & 本番/開発チャネル識別（`version.json`, `js/version.js`, `scripts/bump-revision.js`, `.githooks/pre-commit`）**:
+  - `develop` 版と `production` 版のチャネル識別を追加し、開発版では UI ヘッダ（`DEV v0.0.0 (rev.N)`）・外部適用先ウィンドウ（`DEV rN`）・設定画面にリビジョン番号を表示するよう変更。
+  - コミットごとに `revision` を自動で 1 つずつ繰り上げるスクリプトと Git `pre-commit` フックを追加。
 - **検証・ドキュメント（`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `LICENSE`）**:
   - MIT ライセンス、日本語ドキュメント、開発・Git 運用規約、および Node.js 検証テストスイート。

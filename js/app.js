@@ -237,6 +237,8 @@
         var sourceBadge =
           item.source === "github"
             ? '<span class="badge badge-github">GH</span>'
+            : item.source === "tiny-local"
+            ? '<span class="badge badge-tiny-local">TINY</span>'
             : item.source === "local"
             ? '<span class="badge badge-local">DIR</span>'
             : "";
@@ -638,14 +640,62 @@
       .join("");
   }
 
-  function runLocalFoldersScan(silent) {
-    var lf = store.state.settings.localFolders || {};
-    var paths = lf.paths || [];
-    if (paths.length === 0) {
+  function runLocalTinyScriptsLoad(silent) {
+    var tiny = store.state.settings.localTinyScriptsRepo || {};
+    if (!tiny.path) {
       if (!silent) {
-        setStatus("Add at least one local folder in Settings first.", "error");
+        setStatus("Configure local AE-tiny-scripts path in Settings first.", "error");
         openSettingsModal();
       }
+      return;
+    }
+    setStatus("Loading local AE-tiny-scripts...");
+    LocalSync.scanLocalTinyScriptsRepo(store)
+      .then(function (summary) {
+        var verTag = summary.contentVersion ? " (v" + summary.contentVersion + ")" : "";
+        setStatus(
+          "Local AE-tiny-scripts loaded" +
+            verTag +
+            ": +" +
+            summary.added +
+            " added, " +
+            summary.updated +
+            " updated (" +
+            summary.total +
+            " total).",
+          "success"
+        );
+        if ($("cfg-last-tiny-local")) {
+          $("cfg-last-tiny-local").textContent =
+            "Last loaded: " + new Date().toLocaleString() + (summary.contentVersion ? " (v" + summary.contentVersion + ")" : "");
+        }
+      })
+      .catch(function (err) {
+        setStatus("Local AE-tiny-scripts load failed: " + err.message, "error");
+        if (!silent) {
+          window.alert("Local AE-tiny-scripts Load Error:\n" + err.message);
+        }
+      });
+  }
+
+  function runLocalFoldersScan(silent) {
+    var lf = store.state.settings.localFolders || {};
+    var tiny = store.state.settings.localTinyScriptsRepo || {};
+    var paths = lf.paths || [];
+    var hasTiny = !!(tiny.enabled && tiny.path);
+
+    if (paths.length === 0 && !hasTiny) {
+      if (!silent) {
+        setStatus("Configure Local AE-tiny-scripts or Local Folders in Settings first.", "error");
+        openSettingsModal();
+      }
+      return;
+    }
+
+    if (hasTiny) {
+      runLocalTinyScriptsLoad(silent);
+    }
+    if (paths.length === 0) {
       return;
     }
     setStatus("Scanning local script folders...");
@@ -681,9 +731,21 @@
   // ==================== Settings, GitHub Sync & Self-Update ====================
   function openSettingsModal() {
     var s = store.state.settings;
+    var tiny = s.localTinyScriptsRepo || {};
     var lf = s.localFolders || {};
     var gh = s.scriptsRepo || {};
     var up = s.launcherUpdateRepo || {};
+
+    $("cfg-tiny-local-enabled").checked = !!tiny.enabled;
+    $("cfg-tiny-local-path").value = tiny.path || "";
+    $("cfg-tiny-local-subpath").value = tiny.subPath || "";
+    $("cfg-tiny-local-autosync").checked = tiny.autoSyncOnLaunch !== false;
+    $("cfg-tiny-local-prune").checked = tiny.pruneMissing !== false;
+    $("cfg-last-tiny-local").textContent = tiny.lastSyncAt
+      ? "Last loaded: " +
+        new Date(tiny.lastSyncAt).toLocaleString() +
+        (tiny.contentVersion ? " (v" + tiny.contentVersion + ")" : "")
+      : "Never loaded";
 
     tempLocalFolders = Array.isArray(lf.paths) ? lf.paths.slice() : [];
     renderLocalFoldersSettingsList();
@@ -734,6 +796,13 @@
     store.updateSettings({
       cardScale: Number($("cfg-card-scale").value) || 100,
       viewMode: $("cfg-view-mode").value,
+      localTinyScriptsRepo: {
+        enabled: $("cfg-tiny-local-enabled").checked,
+        path: $("cfg-tiny-local-path").value.trim(),
+        subPath: $("cfg-tiny-local-subpath").value.trim(),
+        autoSyncOnLaunch: $("cfg-tiny-local-autosync").checked,
+        pruneMissing: $("cfg-tiny-local-prune").checked
+      },
       localFolders: {
         paths: tempLocalFolders.slice(),
         autoScanOnLaunch: $("cfg-local-autosync").checked,
@@ -997,6 +1066,36 @@
       $("cfg-card-scale-label").textContent = "100%";
       store.updateSettings({ cardScale: 100 });
     });
+    $("btn-browse-tiny-local").addEventListener("click", function () {
+      if (typeof cep !== "undefined" && cep.fs && cep.fs.showOpenDialog) {
+        var res = cep.fs.showOpenDialog(false, true, "Select Local AE-tiny-scripts Folder", "", []);
+        if (res && res.err === 0 && res.data && res.data.length > 0) {
+          $("cfg-tiny-local-path").value = res.data[0];
+          $("cfg-tiny-local-enabled").checked = true;
+        }
+      } else {
+        window.alert("Enter the local AE-tiny-scripts directory path in the text box (CEP folder dialog is available inside After Effects).");
+      }
+    });
+    $("btn-detect-tiny-local").addEventListener("click", function () {
+      var extDir = csInterface.getSystemPath(SystemPath.EXTENSION);
+      var detected =
+        typeof LocalSync !== "undefined" && typeof LocalSync.detectLocalTinyScriptsPath === "function"
+          ? LocalSync.detectLocalTinyScriptsPath(extDir)
+          : "";
+      if (detected) {
+        $("cfg-tiny-local-path").value = detected;
+        $("cfg-tiny-local-enabled").checked = true;
+        setStatus("Detected local AE-tiny-scripts: " + detected, "success");
+      } else {
+        setStatus("Could not auto-detect AE-tiny-scripts folder. Please specify path manually.", "error");
+      }
+    });
+    $("btn-settings-load-tiny-local").addEventListener("click", function () {
+      $("cfg-tiny-local-enabled").checked = true;
+      saveSettingsFromModal();
+      runLocalTinyScriptsLoad(false);
+    });
     $("btn-browse-local-folder").addEventListener("click", function () {
       if (typeof cep !== "undefined" && cep.fs && cep.fs.showOpenDialog) {
         var res = cep.fs.showOpenDialog(false, true, "Select Scripts Folder", "", []);
@@ -1095,6 +1194,14 @@
     renderItems();
 
     var s = store.state.settings;
+    if (
+      s.localTinyScriptsRepo &&
+      s.localTinyScriptsRepo.enabled &&
+      s.localTinyScriptsRepo.autoSyncOnLaunch !== false &&
+      s.localTinyScriptsRepo.path
+    ) {
+      runLocalTinyScriptsLoad(true);
+    }
     if (s.localFolders && s.localFolders.autoScanOnLaunch !== false && Array.isArray(s.localFolders.paths) && s.localFolders.paths.length > 0) {
       runLocalFoldersScan(true);
     }

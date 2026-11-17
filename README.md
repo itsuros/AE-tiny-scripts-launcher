@@ -15,7 +15,8 @@
   - 各 Script・Expression・FFX は Launcher 本体のバージョン（`version.json`）とは独立した `version` を保持します。
   - `.jsx` / `.expr*` 先頭コメントの `@version 1.2.3`・`Version: 1.2.3`・`var VERSION = "1.2.3"`、`.ffx` / `.jsxbin` 向けのサイドカー `<ファイル名>.meta.json`、GitHub レポジトリ側の `launcher-manifest.json`、および Add/Edit 画面の手動入力から読み取り・管理できます。
 - **表示順の並び替え**: ドラッグ＆ドロップおよび上下移動ボタン（`⇅ Reorder`）によるカスタム順並び替えのほか、名前順（A-Z / Z-A）・種別順でのソートに対応しています。
-- **複数ローカルフォルダ＆別 GitHub レポジトリからのスクリプト自動読み込み**:
+- **ローカル `AE-tiny-scripts` 専用読み込み＆複数ローカルフォルダ＆GitHub 同期**:
+  - **ローカル `AE-tiny-scripts` 専用オプション**: Settings 画面の「Local `AE-tiny-scripts` Repository」を有効にしてローカル配置パス（`Auto` 自動検出対応）および任意サブディレクトリを指定すると、`launcher-manifest.json`・同名アイコン・個別バージョンを含めて `TINY` ソースとして専用管理・読み込みできます。
   - **ローカルフォルダ**: Settings 画面で複数のフォルダパスを登録し、配下の `.jsx` / `.jsxbin` / `.expr.js` / `.expr.txt` / `.expr` / `.ffx` を再帰スキャンして自動登録できます。
   - **GitHub レポジトリ**: 指定した GitHub レポジトリ（`owner/repo`、ブランチ、サブディレクトリ、任意トークン）から自動取得・ダウンロードします。
 - **同名画像の既定アイコン自動適用**: スクリプト（または Expression / FFX）と同一ディレクトリに同名の画像ファイル（`.png` / `.svg` / `.jpg` / `.jpeg` / `.webp` / `.gif` / `.ico`）が存在する場合、既定値としてその画像をアイコンに使用します（ローカルフォルダ・GitHub 同期・手動追加のいずれにも対応）。

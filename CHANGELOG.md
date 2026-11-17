@@ -15,6 +15,7 @@
   - Windows 開発用ジャンクション・`PlayerDebugMode` レジストリ設定・アンインストール（`-Uninstall`）スクリプト（`scripts/install-dev.ps1`, `scripts/install-dev.bat`）。
 - **データストア・複数ローカルフォルダ＆GitHub 自動同期（`js/store.js`, `js/local-sync.js`, `js/github-sync.js`, `js/icon-resolver.js`）**:
   - ローカル永続化（`launcher-state.json` + `localStorage` フォールバック）およびスターターアイテム。
+  - ローカルに配置した `AE-tiny-scripts` レポジトリを読み込む専用オプション（`localTinyScriptsRepo`：`Auto` 自動検出、`subPath` 指定、`launcher-manifest.json` 対応、`TINY` ソース分離管理）を実装。
   - 複数ローカルフォルダのパス登録・再帰スキャンによる自動読み込み（`LocalSync`）。
   - GitHub レポジトリの再帰走査による自動ダウンロードと拡張子ベースの自動種別判定（`.jsx` / `.jsxbin`, `.expr.js` / `.expr.txt` / `.expr`, `.ffx`）。
   - 同一ディレクトリ内の同名画像ファイル（`.png`, `.svg`, `.jpg` 等）を既定アイコンとして自動検出・適用する `IconResolver` を実装。

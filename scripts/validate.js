@@ -92,7 +92,7 @@ test("index.html, target-picker.html, and help.html reference required assets an
     assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
   });
 
-  ["search-input", "search-field-icon", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon", "item-version"].forEach(
+  ["search-input", "search-field-icon", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon", "item-version", "cfg-tiny-local-enabled", "cfg-tiny-local-path", "btn-detect-tiny-local"].forEach(
     function (idOrClass) {
       assert.ok(html.indexOf(idOrClass) >= 0, "Missing UI control in index.html: " + idOrClass);
     }
@@ -367,6 +367,74 @@ test("LauncherStore.parseContentVersion extracts independent item versions", fun
   assert.strictEqual(global.LauncherStore.parseContentVersion("/* Version: v0.9.5-beta */"), "0.9.5-beta");
   assert.strictEqual(global.LauncherStore.parseContentVersion('var VERSION = "4.1.0";'), "4.1.0");
   assert.strictEqual(global.LauncherStore.parseContentVersion("alert('no version');"), "");
+});
+
+test("LocalSync.scanLocalTinyScriptsRepo loads dedicated local AE-tiny-scripts with manifest and subPath", function () {
+  var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ae-tiny-scripts-local-"));
+  var repoRoot = path.join(tmpDir, "AE-tiny-scripts");
+  var scriptsSub = path.join(repoRoot, "scripts");
+  var dataDir = path.join(tmpDir, "data");
+  fs.mkdirSync(scriptsSub, { recursive: true });
+  fs.mkdirSync(dataDir, { recursive: true });
+
+  fs.writeFileSync(
+    path.join(repoRoot, "launcher-manifest.json"),
+    JSON.stringify({
+      version: "1.5.0",
+      items: {
+        "scripts/custom_tool.jsx": {
+          name: "Custom Tiny Tool",
+          version: "2.0.0",
+          description: "Manifest override description"
+        }
+      }
+    }),
+    "utf8"
+  );
+  fs.writeFileSync(path.join(scriptsSub, "custom_tool.jsx"), "alert('tiny');", "utf8");
+  fs.writeFileSync(path.join(scriptsSub, "custom_tool.png"), "png", "utf8");
+  fs.writeFileSync(path.join(scriptsSub, "shake.expr.js"), "// @version 1.1.0\nwiggle(3, 15);", "utf8");
+
+  var store = new global.LauncherStore({ dataDir: dataDir });
+  store.updateSettings({
+    localTinyScriptsRepo: {
+      enabled: true,
+      path: repoRoot,
+      subPath: "scripts",
+      autoSyncOnLaunch: true,
+      pruneMissing: true
+    }
+  });
+
+  // Auto-detect should locate sibling AE-tiny-scripts directory
+  var detected = global.LocalSync.detectLocalTinyScriptsPath(path.join(tmpDir, "AE-tiny-scripts-launcher"));
+  assert.strictEqual(detected, repoRoot);
+
+  return global.LocalSync.scanLocalTinyScriptsRepo(store)
+    .then(function (summary) {
+      assert.strictEqual(summary.added, 2);
+      assert.strictEqual(summary.contentVersion, "1.5.0");
+      assert.strictEqual(store.state.settings.localTinyScriptsRepo.contentVersion, "1.5.0");
+
+      var customTool = store.state.items.find(function (it) {
+        return it.name === "Custom Tiny Tool";
+      });
+      assert.ok(customTool, "Manifest name override should apply");
+      assert.strictEqual(customTool.source, "tiny-local");
+      assert.strictEqual(customTool.version, "2.0.0");
+      assert.strictEqual(customTool.description, "Manifest override description");
+      assert.strictEqual(customTool.customIconPath, path.join(scriptsSub, "custom_tool.png"));
+
+      var shakeExpr = store.state.items.find(function (it) {
+        return it.name === "shake" && it.type === "expression";
+      });
+      assert.ok(shakeExpr);
+      assert.strictEqual(shakeExpr.source, "tiny-local");
+      assert.strictEqual(shakeExpr.version, "1.1.0");
+    })
+    .finally(function () {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
 });
 
 runAllTests();

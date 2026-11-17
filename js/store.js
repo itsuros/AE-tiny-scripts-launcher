@@ -189,6 +189,16 @@
         filterType: "all", // "all" | "script" | "expression" | "ffx"
         filterSource: "all", // "all" | "manual" | "github" | "local"
         sortBy: "custom", // "custom" | "name_asc" | "name_desc" | "type"
+        // Local AE-tiny-scripts Dedicated Repository Settings
+        localTinyScriptsRepo: {
+          enabled: false,
+          path: "",
+          subPath: "",
+          autoSyncOnLaunch: true,
+          pruneMissing: true,
+          lastSyncAt: null,
+          contentVersion: null
+        },
         // Local Script Folders Settings
         localFolders: {
           paths: [],
@@ -260,6 +270,11 @@
       this.state = {
         version: "0.0.0",
         settings: Object.assign({}, def.settings, loaded.settings || {}, {
+          localTinyScriptsRepo: Object.assign(
+            {},
+            def.settings.localTinyScriptsRepo,
+            (loaded.settings && loaded.settings.localTinyScriptsRepo) || {}
+          ),
           localFolders: Object.assign(
             {},
             def.settings.localFolders,
@@ -324,6 +339,13 @@
 
   LauncherStore.prototype.updateSettings = function (partial) {
     this.state.settings = Object.assign({}, this.state.settings, partial);
+    if (partial.localTinyScriptsRepo) {
+      this.state.settings.localTinyScriptsRepo = Object.assign(
+        {},
+        this.state.settings.localTinyScriptsRepo,
+        partial.localTinyScriptsRepo
+      );
+    }
     if (partial.localFolders) {
       this.state.settings.localFolders = Object.assign({}, this.state.settings.localFolders, partial.localFolders);
     }
@@ -519,12 +541,12 @@
   };
 
   /**
-   * Merge items scanned from configured local folders while preserving custom order and manual/GitHub items
+   * Shared merge helper for filesystem-based items ("local" or "tiny-local")
    */
-  LauncherStore.prototype.mergeLocalItems = function (foundItems, removeMissingLocal) {
+  LauncherStore.prototype._mergeFileSystemItems = function (sourceTag, foundItems, removeMissing) {
     var existingByPath = {};
     this.state.items.forEach(function (it) {
-      if (it.source === "local" && it.filePath) {
+      if (it.source === sourceTag && it.filePath) {
         existingByPath[it.filePath] = it;
       }
     });
@@ -532,6 +554,7 @@
     var seenPaths = {};
     var added = 0;
     var updated = 0;
+    var idPrefix = sourceTag === "tiny-local" ? "tiny-" : "loc-";
 
     for (var i = 0; i < foundItems.length; i++) {
       var local = foundItems[i];
@@ -549,16 +572,19 @@
         if (local.customIconPath !== undefined) {
           existing.customIconPath = local.customIconPath;
         }
+        if (Array.isArray(local.tags) && local.tags.length > 0) {
+          existing.tags = local.tags;
+        }
         updated++;
       } else {
         this.state.items.push({
-          id: "loc-" + Date.now() + "-" + i + "-" + Math.random().toString(36).slice(2, 5),
+          id: idPrefix + Date.now() + "-" + i + "-" + Math.random().toString(36).slice(2, 5),
           name: local.name,
           type: local.type || "script",
           version: String(local.version || "").trim(),
-          source: "local",
-          icon: local.type === "expression" ? "wave" : local.type === "ffx" ? "sparkles" : "bolt",
-          color: local.type === "expression" ? "#a855f7" : local.type === "ffx" ? "#f59e0b" : "#10b981",
+          source: sourceTag,
+          icon: local.icon || (local.type === "expression" ? "wave" : local.type === "ffx" ? "sparkles" : "bolt"),
+          color: local.color || (local.type === "expression" ? "#a855f7" : local.type === "ffx" ? "#f59e0b" : sourceTag === "tiny-local" ? "#06b6d4" : "#10b981"),
           customIconPath: local.customIconPath || "",
           description: local.description || "Local: " + local.filePath,
           filePath: local.filePath,
@@ -570,7 +596,7 @@
           defaultTargetLayerMode: "selected_layers",
           defaultTimeMode: "current_time",
           order: this.state.items.length,
-          tags: ["local"],
+          tags: Array.isArray(local.tags) ? local.tags : [sourceTag],
           createdAt: new Date().toISOString()
         });
         added++;
@@ -578,23 +604,53 @@
     }
 
     var removed = 0;
-    if (removeMissingLocal) {
+    if (removeMissing) {
       var beforeCount = this.state.items.length;
       this.state.items = this.state.items.filter(function (it) {
-        if (it.source !== "local") return true;
+        if (it.source !== sourceTag) return true;
         return !!seenPaths[it.filePath];
       });
       removed = beforeCount - this.state.items.length;
     }
 
+    return { added: added, updated: updated, removed: removed, total: foundItems.length };
+  };
+
+  /**
+   * Merge items scanned from configured local folders while preserving custom order and manual/GitHub items
+   */
+  LauncherStore.prototype.mergeLocalItems = function (foundItems, removeMissingLocal) {
+    var summary = this._mergeFileSystemItems("local", foundItems, removeMissingLocal);
     if (!this.state.settings.localFolders) {
       this.state.settings.localFolders = { paths: [], autoScanOnLaunch: true, pruneMissing: true, lastScanAt: null };
     }
     this.state.settings.localFolders.lastScanAt = new Date().toISOString();
     this.normalizeOrder();
     this.save();
+    return summary;
+  };
 
-    return { added: added, updated: updated, removed: removed, total: foundItems.length };
+  /**
+   * Merge items scanned from dedicated local AE-tiny-scripts repository
+   */
+  LauncherStore.prototype.mergeTinyScriptsLocalItems = function (foundItems, removeMissing, contentVersion) {
+    var summary = this._mergeFileSystemItems("tiny-local", foundItems, removeMissing);
+    if (!this.state.settings.localTinyScriptsRepo) {
+      this.state.settings.localTinyScriptsRepo = {
+        enabled: false,
+        path: "",
+        subPath: "",
+        autoSyncOnLaunch: true,
+        pruneMissing: true,
+        lastSyncAt: null,
+        contentVersion: null
+      };
+    }
+    this.state.settings.localTinyScriptsRepo.lastSyncAt = new Date().toISOString();
+    this.state.settings.localTinyScriptsRepo.contentVersion = contentVersion || null;
+    this.normalizeOrder();
+    this.save();
+    return summary;
   };
 
   var TARGET_REQUEST_KEY = "ae_tiny_scripts_launcher_pending_target_v1";

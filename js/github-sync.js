@@ -226,6 +226,38 @@
         );
       }
 
+      // Check for optional launcher-manifest.json in subPath or root for independent content versioning
+      var manifestCandidates = subPath ? [subPath + "/launcher-manifest.json", "launcher-manifest.json"] : ["launcher-manifest.json"];
+      var manifestPath = null;
+      for (var mIdx = 0; mIdx < manifestCandidates.length; mIdx++) {
+        if (allBlobPaths.indexOf(manifestCandidates[mIdx]) >= 0) {
+          manifestPath = manifestCandidates[mIdx];
+          break;
+        }
+      }
+
+      var manifestData = { version: null, items: {} };
+
+      if (manifestPath) {
+        chain = chain.then(function () {
+          return fetchRawBuffer(buildRawUrl(manifestPath), token)
+            .then(function (buf) {
+              var txt =
+                typeof TextDecoder !== "undefined" && !(buf instanceof Buffer)
+                  ? new TextDecoder("utf-8").decode(buf)
+                  : Buffer.from(buf).toString("utf8");
+              var parsedManifest = JSON.parse(txt);
+              if (parsedManifest && typeof parsedManifest === "object") {
+                manifestData.version = parsedManifest.version || null;
+                manifestData.items = parsedManifest.items || {};
+              }
+            })
+            .catch(function () {
+              // ignore invalid manifest
+            });
+        });
+      }
+
       candidateFiles.forEach(function (fileNode, idx) {
         chain = chain.then(function () {
           var itemType = detectItemTypeFromFilename(fileNode.path);
@@ -263,15 +295,22 @@
 
             return iconPromise.then(function (localIconPath) {
               var baseName = fileNode.path.split("/").pop();
+              var manifestItem = manifestData.items[fileNode.path] || {};
+              var itemVersion =
+                manifestItem.version ||
+                (global.LauncherStore && typeof global.LauncherStore.parseContentVersion === "function"
+                  ? global.LauncherStore.parseContentVersion(textCode)
+                  : "");
               syncedItems.push({
-                name: cleanDisplayName(baseName),
+                name: manifestItem.name || cleanDisplayName(baseName),
                 type: itemType,
+                version: itemVersion || "",
                 remotePath: fileNode.path,
                 sha: fileNode.sha,
                 filePath: localPath,
                 customIconPath: localIconPath || "",
                 code: itemType === "expression" || !localPath ? textCode : "",
-                description: "GitHub: " + parsed.owner + "/" + parsed.repo + " (" + fileNode.path + ")"
+                description: manifestItem.description || "GitHub: " + parsed.owner + "/" + parsed.repo + " (" + fileNode.path + ")"
               });
             });
           });
@@ -279,7 +318,11 @@
       });
 
       return chain.then(function () {
+        if (store.state.settings.scriptsRepo) {
+          store.state.settings.scriptsRepo.contentVersion = manifestData.version || null;
+        }
         var summary = store.mergeGitHubItems(syncedItems, !!options.removeMissingRemote);
+        summary.contentVersion = manifestData.version || null;
         onProgress("Sync complete! " + summary.added + " added, " + summary.updated + " updated.");
         return summary;
       });

@@ -516,6 +516,13 @@ body {
   color: #6ee7b7;
 }
 
+.badge-item-version {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-secondary);
+  text-transform: none;
+  font-weight: 500;
+}
+
 .card-hover-actions {
   position: absolute;
   top: 3px;

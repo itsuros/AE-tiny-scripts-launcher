@@ -92,7 +92,7 @@ test("index.html, target-picker.html, and help.html reference required assets an
     assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
   });
 
-  ["btn-toggle-search", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon"].forEach(
+  ["btn-toggle-search", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon", "item-version"].forEach(
     function (idOrClass) {
       assert.ok(html.indexOf(idOrClass) >= 0, "Missing UI control in index.html: " + idOrClass);
     }
@@ -306,10 +306,11 @@ test("LocalSync scans multiple configured local folders and resolves sibling ico
   fs.mkdirSync(sub2, { recursive: true });
   fs.mkdirSync(dataDir, { recursive: true });
 
-  fs.writeFileSync(path.join(dir1, "tool_one.jsx"), "alert(1);", "utf8");
+  fs.writeFileSync(path.join(dir1, "tool_one.jsx"), "// @version 2.3.1\nalert(1);", "utf8");
   fs.writeFileSync(path.join(dir1, "tool_one.png"), "fake-png", "utf8");
-  fs.writeFileSync(path.join(sub2, "bounce.expr.txt"), "loopOut();", "utf8");
+  fs.writeFileSync(path.join(sub2, "bounce.expr.txt"), "// Version: v1.4.0\nloopOut();", "utf8");
   fs.writeFileSync(path.join(sub2, "preset.ffx"), "ffx", "utf8");
+  fs.writeFileSync(path.join(sub2, "preset.ffx.meta.json"), JSON.stringify({ version: "3.0.0" }), "utf8");
 
   var store = new global.LauncherStore({ dataDir: dataDir });
   store.updateSettings({
@@ -327,18 +328,36 @@ test("LocalSync scans multiple configured local folders and resolves sibling ico
       });
       assert.ok(toolOne, "tool_one.jsx should be registered");
       assert.strictEqual(toolOne.source, "local");
+      assert.strictEqual(toolOne.version, "2.3.1");
       assert.strictEqual(toolOne.customIconPath, path.join(dir1, "tool_one.png"));
 
       var bounceExpr = store.state.items.find(function (it) {
         return it.name === "bounce" && it.type === "expression";
       });
       assert.ok(bounceExpr, "bounce.expr.txt should be registered as expression");
-      assert.strictEqual(bounceExpr.code, "loopOut();");
+      assert.strictEqual(bounceExpr.version, "1.4.0");
+      assert.strictEqual(bounceExpr.code, "// Version: v1.4.0\nloopOut();");
+
+      var presetFfx = store.state.items.find(function (it) {
+        return it.name === "preset" && it.type === "ffx";
+      });
+      assert.ok(presetFfx, "preset.ffx should be registered");
+      assert.strictEqual(presetFfx.version, "3.0.0");
+
+      // Launcher version remains completely separate from item versions
+      assert.strictEqual(global.AppVersion.version, "0.0.0");
       assert.strictEqual(store.state.settings.cardScale, 65);
     })
     .finally(function () {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
+});
+
+test("LauncherStore.parseContentVersion extracts independent item versions", function () {
+  assert.strictEqual(global.LauncherStore.parseContentVersion("// @version 1.2.3\nalert();"), "1.2.3");
+  assert.strictEqual(global.LauncherStore.parseContentVersion("/* Version: v0.9.5-beta */"), "0.9.5-beta");
+  assert.strictEqual(global.LauncherStore.parseContentVersion('var VERSION = "4.1.0";'), "4.1.0");
+  assert.strictEqual(global.LauncherStore.parseContentVersion("alert('no version');"), "");
 });
 
 runAllTests();

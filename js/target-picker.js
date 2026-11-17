@@ -173,17 +173,18 @@
       $("picker-empty-view").classList.add("hidden");
       $("btn-picker-apply").disabled = false;
       var badge = $("picker-type-badge");
+      var itemVerSuffix = item.version ? " (v" + String(item.version).replace(/^v/i, "") + ")" : "";
       if (item.type === "expression") {
         badge.textContent = "EXPR";
         badge.className = "badge badge-expression";
-        $("picker-window-title").textContent = "Apply Expression: " + item.name;
+        $("picker-window-title").textContent = "Apply Expression: " + item.name + itemVerSuffix;
         $("btn-picker-apply").textContent = "Apply Expression";
         $("picker-expr-view").classList.remove("hidden");
         $("picker-ffx-view").classList.add("hidden");
       } else {
         badge.textContent = "FFX";
         badge.className = "badge badge-ffx";
-        $("picker-window-title").textContent = "Apply FFX Preset: " + item.name;
+        $("picker-window-title").textContent = "Apply FFX Preset: " + item.name + itemVerSuffix;
         $("btn-picker-apply").textContent = "Apply FFX Preset";
         $("picker-ffx-view").classList.remove("hidden");
         $("picker-expr-view").classList.add("hidden");

@@ -11,6 +11,9 @@
 - **CEP ドッキングパネル**: Adobe CEP v11（`CSXS 9.0+` / After Effects `16.0+`）および `--enable-nodejs` に対応し、After Effects 本体のテーマカラー（ダーク / ライト）に自動追従します。パネル横幅を狭くした場合は、バージョン表示が自動でアイコン表示へ切り替わりレイアウト崩れを防ぎます。
 - **アイコン型（グリッド）＆リスト型の表示切替・カードサイズ変更＆リセット**: ツールバーの `Size` スライダー（55%〜140%）でカード UI 全体を拡大・縮小でき、`↺` / `Reset` ボタンでワンクリックで 100% にリセットできます。縮小時はコンパクト表示に切り替えて画面内に多くのツールを一覧できます。
 - **アイコン型検索トグル＆設定内ヘルプウィンドウ**: 検索機能は虫眼鏡アイコンボタンのみのコンパクト表示とし、クリック時に入力欄を展開します。設定画面ヘッダには別ウィンドウで日本語ヘルプ（`help.html`）を開くアイコンボタンを備えています。
+- **Script / Expression / FFX の個別バージョン管理（Launcher 本体と分離）**:
+  - 各 Script・Expression・FFX は Launcher 本体のバージョン（`version.json`）とは独立した `version` を保持します。
+  - `.jsx` / `.expr*` 先頭コメントの `@version 1.2.3`・`Version: 1.2.3`・`var VERSION = "1.2.3"`、`.ffx` / `.jsxbin` 向けのサイドカー `<ファイル名>.meta.json`、GitHub レポジトリ側の `launcher-manifest.json`、および Add/Edit 画面の手動入力から読み取り・管理できます。
 - **表示順の並び替え**: ドラッグ＆ドロップおよび上下移動ボタン（`⇅ Reorder`）によるカスタム順並び替えのほか、名前順（A-Z / Z-A）・種別順でのソートに対応しています。
 - **複数ローカルフォルダ＆別 GitHub レポジトリからのスクリプト自動読み込み**:
   - **ローカルフォルダ**: Settings 画面で複数のフォルダパスを登録し、配下の `.jsx` / `.jsxbin` / `.expr.js` / `.expr.txt` / `.expr` / `.ffx` を再帰スキャンして自動登録できます。
@@ -164,6 +167,22 @@ npm test
 ダウンロード済みファイルおよび設定データはローカルの以下に保存されます。
 - macOS: `~/Library/Application Support/AETinyScriptsLauncher/`
 - Windows: `%APPDATA%\AETinyScriptsLauncher\`
+
+### 個別バージョン・バンドルバージョンを GitHub 側で指定する場合（任意）
+
+スクリプト同期先レポジトリに `launcher-manifest.json` を配置すると、Launcher 本体とは独立したスクリプト集バージョンや個別アイテムのバージョンを指定できます（未配置でも `.jsx` / `.expr*` 内の `@version` コメントから自動抽出されます）。
+
+```json
+{
+  "version": "1.2.0",
+  "items": {
+    "presets/glow.ffx": {
+      "version": "2.0.1",
+      "description": "Glow animation preset"
+    }
+  }
+}
+```
 
 ---
 

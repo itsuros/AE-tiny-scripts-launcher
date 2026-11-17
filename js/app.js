@@ -231,6 +231,9 @@
         var iconWrapStyle = iconInfo.hasCustom ? "background:transparent" : "background:" + escapeHtml(fallbackColor);
         var iconWrapExtra = iconInfo.hasCustom ? " has-custom-icon" : "";
         var typeLabel = item.type === "expression" ? "EXPR" : item.type === "ffx" ? "FFX" : "JSX";
+        var itemVerLabel = item.version ? "v" + String(item.version).replace(/^v/i, "") : "";
+        var itemVerBadge = itemVerLabel ? '<span class="badge badge-item-version">' + escapeHtml(itemVerLabel) + "</span>" : "";
+        var tooltipText = (item.description || item.name) + (itemVerLabel ? " (" + itemVerLabel + ")" : "");
         var sourceBadge =
           item.source === "github"
             ? '<span class="badge badge-github">GH</span>'
@@ -252,7 +255,7 @@
             '" data-id="' +
             escapeHtml(item.id) +
             '" title="' +
-            escapeHtml(item.description || item.name) +
+            escapeHtml(tooltipText) +
             '">' +
             '<div class="list-icon-wrap' +
             iconWrapExtra +
@@ -273,6 +276,7 @@
             '">' +
             typeLabel +
             "</span>" +
+            itemVerBadge +
             sourceBadge +
             "</div>" +
             '<div class="list-desc">' +
@@ -292,7 +296,7 @@
           '" data-id="' +
           escapeHtml(item.id) +
           '" title="' +
-          escapeHtml(item.description || item.name) +
+          escapeHtml(tooltipText) +
           '">' +
           '<div class="card-hover-actions">' +
           commonActions +
@@ -315,6 +319,7 @@
           '">' +
           typeLabel +
           "</span>" +
+          itemVerBadge +
           sourceBadge +
           "</div>" +
           "</div>"
@@ -498,6 +503,7 @@
     $("item-type").value = isEdit ? item.type : "script";
     $("item-color").value = isEdit ? item.color || "#4f8cff" : "#4f8cff";
     $("item-name").value = isEdit ? item.name : "";
+    $("item-version").value = isEdit ? item.version || "" : "";
     $("item-icon").value = isEdit ? item.icon || "bolt" : "bolt";
     $("item-description").value = isEdit ? item.description || "" : "";
     $("item-filepath").value = isEdit ? item.filePath || "" : "";
@@ -561,6 +567,23 @@
       var sibling = IconResolver.findSiblingImageFile(filePath);
       if (sibling) {
         $("item-icon-path").value = sibling;
+      }
+    }
+    if (!$("item-version").value.trim()) {
+      var sidecar = LauncherStore.readSidecarMeta(filePath);
+      if (sidecar && sidecar.version) {
+        $("item-version").value = sidecar.version;
+      } else if (typeof require === "function" && (lower.endsWith(".jsx") || lower.indexOf(".expr") >= 0)) {
+        try {
+          var req = typeof cep_node !== "undefined" && cep_node.require ? cep_node.require : require;
+          var fs = req("fs");
+          if (fs.existsSync(filePath)) {
+            var detectedVer = LauncherStore.parseContentVersion(fs.readFileSync(filePath, "utf8"));
+            if (detectedVer) $("item-version").value = detectedVer;
+          }
+        } catch (e) {
+          // ignore
+        }
       }
     }
     updateItemFormVisibility();
@@ -677,7 +700,11 @@
     $("cfg-github-token").value = gh.token || "";
     $("cfg-scripts-autosync").checked = !!gh.autoSyncOnLaunch;
     $("cfg-scripts-prune").checked = !!gh.pruneMissing;
-    $("cfg-last-sync").textContent = gh.lastSyncAt ? "Last sync: " + new Date(gh.lastSyncAt).toLocaleString() : "Never synced";
+    $("cfg-last-sync").textContent = gh.lastSyncAt
+      ? "Last sync: " +
+        new Date(gh.lastSyncAt).toLocaleString() +
+        (gh.contentVersion ? " (Scripts v" + gh.contentVersion + ")" : "")
+      : "Never synced";
 
     if (typeof AppVersion !== "undefined") {
       $("cfg-current-version").textContent = AppVersion.isDevelop()
@@ -950,6 +977,7 @@
 
       var payload = {
         name: $("item-name").value.trim(),
+        version: $("item-version").value.trim().replace(/^v/i, ""),
         type: $("item-type").value,
         color: $("item-color").value,
         icon: $("item-icon").value,

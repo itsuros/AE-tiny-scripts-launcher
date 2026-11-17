@@ -112,6 +112,10 @@ test("index.html, target-picker.html, and help.html reference required assets an
   var css = fs.readFileSync(path.join(ROOT, "css/styles.css"), "utf8");
   assert.ok(css.indexOf("::-webkit-scrollbar") >= 0, "Missing custom scrollbar styling in css/styles.css");
   assert.ok(css.indexOf("--scrollbar-size: 6px") >= 0, "Expected narrow 6px scrollbar size variable");
+  assert.ok(
+    css.indexOf('.search-input-wrap input[type="search"]') >= 0,
+    "Search input must override global input[type=search] border/outline"
+  );
 });
 
 test("macOS and Windows dev setup scripts exist and reference bundle ID", function () {

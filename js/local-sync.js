@@ -11,12 +11,14 @@
   var hasNode = typeof process !== "undefined" && process.versions && !!process.versions.node;
   var fs = null;
   var path = null;
+  var os = null;
 
   if (hasNode) {
     try {
       var req = typeof cep_node !== "undefined" && cep_node.require ? cep_node.require : require;
       fs = req("fs");
       path = req("path");
+      os = req("os");
     } catch (e) {
       hasNode = false;
     }
@@ -129,7 +131,127 @@
     return Promise.resolve(summary);
   }
 
+  /**
+   * Auto-detect common locations where a local AE-tiny-scripts checkout may be placed
+   */
+  function detectLocalTinyScriptsPath(extensionDir) {
+    if (!hasNode || !fs || !path) return "";
+    var candidates = [];
+    if (extensionDir) {
+      candidates.push(path.resolve(extensionDir, "..", "AE-tiny-scripts"));
+    }
+    if (os && typeof os.homedir === "function") {
+      var home = os.homedir();
+      candidates.push(path.join(home, "Development", "GitHub", "AE-tiny-scripts"));
+      candidates.push(path.join(home, "Documents", "GitHub", "AE-tiny-scripts"));
+      candidates.push(path.join(home, "Documents", "AE-tiny-scripts"));
+    }
+    for (var i = 0; i < candidates.length; i++) {
+      try {
+        if (fs.existsSync(candidates[i]) && fs.statSync(candidates[i]).isDirectory()) {
+          return candidates[i];
+        }
+      } catch (e) {
+        // ignore inaccessible candidate
+      }
+    }
+    return "";
+  }
+
+  function readLocalTinyScriptsManifest(repoRoot, subPath) {
+    var meta = { version: null, items: {} };
+    if (!hasNode || !fs || !path) return meta;
+    var targetDir = subPath ? path.join(repoRoot, subPath) : repoRoot;
+    var manifestCandidates = [
+      path.join(targetDir, "launcher-manifest.json"),
+      path.join(repoRoot, "launcher-manifest.json")
+    ];
+    for (var i = 0; i < manifestCandidates.length; i++) {
+      if (fs.existsSync(manifestCandidates[i])) {
+        try {
+          var parsed = JSON.parse(fs.readFileSync(manifestCandidates[i], "utf8"));
+          if (parsed && typeof parsed === "object") {
+            meta.version = parsed.version || null;
+            meta.items = parsed.items || {};
+            return meta;
+          }
+        } catch (e) {
+          // ignore malformed manifest
+        }
+      }
+    }
+    var pkgPath = path.join(repoRoot, "package.json");
+    if (fs.existsSync(pkgPath)) {
+      try {
+        var pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+        if (pkg && typeof pkg.version === "string") {
+          meta.version = pkg.version;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return meta;
+  }
+
+  /**
+   * Scan the dedicated local AE-tiny-scripts repository directory
+   */
+  function scanLocalTinyScriptsRepo(store, options) {
+    options = options || {};
+    if (!hasNode || !fs || !path) {
+      return Promise.reject(new Error("Local AE-tiny-scripts loading requires CEP Node.js runtime."));
+    }
+
+    var cfg = store.state.settings.localTinyScriptsRepo || {};
+    var repoRoot = String(options.path !== undefined ? options.path : cfg.path || "").trim();
+    var subPath = String(options.subPath !== undefined ? options.subPath : cfg.subPath || "")
+      .trim()
+      .replace(/^[/\\]+|[/\\]+$/g, "");
+
+    if (!repoRoot) {
+      return Promise.reject(new Error("Local AE-tiny-scripts path is not configured."));
+    }
+    if (!fs.existsSync(repoRoot) || !fs.statSync(repoRoot).isDirectory()) {
+      return Promise.reject(new Error("Local AE-tiny-scripts directory not found: " + repoRoot));
+    }
+
+    var scanDir = subPath ? path.join(repoRoot, subPath) : repoRoot;
+    if (!fs.existsSync(scanDir) || !fs.statSync(scanDir).isDirectory()) {
+      return Promise.reject(new Error("Configured subdirectory not found inside AE-tiny-scripts: " + scanDir));
+    }
+
+    var manifest = readLocalTinyScriptsManifest(repoRoot, subPath);
+    var foundItems = [];
+    walkDirectory(scanDir, repoRoot, foundItems, 0);
+
+    foundItems.forEach(function (it) {
+      var relPosix = path.relative(repoRoot, it.filePath).split(path.sep).join("/");
+      var override = manifest.items[relPosix] || {};
+      if (override.name) it.name = override.name;
+      if (override.version) it.version = String(override.version).trim();
+      if (override.description) it.description = override.description;
+      if (override.icon) it.icon = override.icon;
+      if (override.color) it.color = override.color;
+      if (Array.isArray(override.tags)) it.tags = override.tags;
+      if (!override.description) {
+        it.description = "AE-tiny-scripts (local): " + relPosix;
+      }
+      if (!it.tags) {
+        it.tags = ["ae-tiny-scripts", "local"];
+      }
+    });
+
+    var pruneMissing = options.pruneMissing !== undefined ? !!options.pruneMissing : cfg.pruneMissing !== false;
+    var summary = store.mergeTinyScriptsLocalItems(foundItems, pruneMissing, manifest.version);
+    summary.contentVersion = manifest.version;
+    summary.scannedPath = scanDir;
+    return Promise.resolve(summary);
+  }
+
   global.LocalSync = {
-    scanLocalFolders: scanLocalFolders
+    scanLocalFolders: scanLocalFolders,
+    scanLocalTinyScriptsRepo: scanLocalTinyScriptsRepo,
+    detectLocalTinyScriptsPath: detectLocalTinyScriptsPath
   };
 })(typeof window !== "undefined" ? window : global);

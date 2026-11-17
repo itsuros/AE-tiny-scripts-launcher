@@ -436,6 +436,44 @@
         <button class="icon-btn modal-close" data-close="modal-settings" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- Section 0A: Local AE-tiny-scripts Dedicated Repository -->
+        <section class="settings-section">
+          <h3>Local <code>AE-tiny-scripts</code> Repository</h3>
+          <p class="section-desc">Dedicated loader for a locally cloned or placed <code>AE-tiny-scripts</code> directory (supports <code>launcher-manifest.json</code>, sibling icons, and independent content versions).</p>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="cfg-tiny-local-enabled" />
+            <span>Use local <code>AE-tiny-scripts</code> directory</span>
+          </label>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="cfg-tiny-local-path">Local <code>AE-tiny-scripts</code> Path</label>
+              <div class="input-with-btn">
+                <input id="cfg-tiny-local-path" type="text" placeholder="/path/to/AE-tiny-scripts" />
+                <button type="button" id="btn-browse-tiny-local" class="btn btn-secondary btn-sm">Browse</button>
+                <button type="button" id="btn-detect-tiny-local" class="btn btn-secondary btn-sm" title="Auto-detect local AE-tiny-scripts folder">Auto</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfg-tiny-local-subpath">Subdirectory <span class="hint">(optional)</span></label>
+              <input id="cfg-tiny-local-subpath" type="text" placeholder="scripts" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-tiny-local-autosync" />
+              <span>Auto-load on panel launch</span>
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-tiny-local-prune" />
+              <span>Remove items missing from disk</span>
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button type="button" id="btn-settings-load-tiny-local" class="btn btn-secondary btn-sm">Load Local AE-tiny-scripts Now</button>
+            <span id="cfg-last-tiny-local" class="hint"></span>
+          </div>
+        </section>
+
         <!-- Section 0: Local Script Folders (Multiple Paths) -->
         <section class="settings-section">
           <h3>Local Script Folders (Multiple Paths)</h3>

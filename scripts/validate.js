@@ -107,6 +107,10 @@ test("index.html, target-picker.html, and help.html reference required assets an
   ["css/styles.css", "js/lib/CSInterface.js", "js/version.js"].forEach(function (rel) {
     assert.ok(helpHtml.indexOf(rel) >= 0, "Missing reference in help.html: " + rel);
   });
+
+  var css = fs.readFileSync(path.join(ROOT, "css/styles.css"), "utf8");
+  assert.ok(css.indexOf("::-webkit-scrollbar") >= 0, "Missing custom scrollbar styling in css/styles.css");
+  assert.ok(css.indexOf("--scrollbar-size: 6px") >= 0, "Expected narrow 6px scrollbar size variable");
 });
 
 test("macOS and Windows dev setup scripts exist and reference bundle ID", function () {

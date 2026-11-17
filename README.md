@@ -168,14 +168,20 @@ npm test
 ## 開発ルール・Git ブランチ運用
 
 - **ドキュメント言語**: 本プロジェクトのドキュメント（README、CHANGELOG、設計メモ等）は**常に日本語**で記述します。
+- **開発版（`develop`）と本番版（`production`）のバージョン識別・リビジョン管理**:
+  - `version.json` および `js/version.js` で `version`・`channel`（`"develop"` / `"production"`）・`revision` を管理しています。
+  - **開発版（`develop`）**: コミットごとに `revision` を 1 つずつインクリメントし、UI 上に **`DEV v0.0.0 (rev.26)`**（適用先選択ウィンドウには **`DEV r26`**）のようにリビジョンを表示します。
+  - **本番版（`production`）**: リビジョン表示を省き、**`v0.0.0`**（リリース後の該当バージョン）および設定画面に `[PRODUCTION]` と表示します。
+  - `.githooks/pre-commit` を有効化（`npm run setup:hooks` または `install-dev` スクリプト実行時に自動設定）しておくと、`develop` 系の通常コミット時に自動で `revision` が `+1` されます（手動実行は `npm run bump:rev`）。
 - **ブランチ運用**:
   - `main`: リリース用ブランチ（初期状態は空コミット）。
   - `develop`: 恒久的な統合開発ブランチ（**リリース後も削除せず維持します**）。
   - `feat/*`, `fix/*`, `docs/*`: `develop` から機能・作業単位で切り出し、`develop` へマージ後に削除します。
 - **リリース手順**:
-  1. `package.json`、`CSXS/manifest.xml`、`js/store.js`、`js/updater.js`、`CHANGELOG.md` のバージョンを一括更新します。
+  1. `node scripts/bump-revision.js --channel production` で本番チャネルへ切り替え、`package.json`、`CSXS/manifest.xml`、`version.json`、`js/version.js`、`CHANGELOG.md` のバージョンを一括更新します。
   2. `develop` から `main` へ Pull Request を作成してマージします。
   3. `main` にリリースタグ（例: `v0.1.0` / `v1.0.0`）を打ち、GitHub Release を公開します。
+  4. リリース後、`develop` 側で `node scripts/bump-revision.js --channel develop` を実行して開発チャネルへ戻します。
 
 ---
 

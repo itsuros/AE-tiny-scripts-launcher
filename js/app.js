@@ -679,7 +679,13 @@
     $("cfg-scripts-prune").checked = !!gh.pruneMissing;
     $("cfg-last-sync").textContent = gh.lastSyncAt ? "Last sync: " + new Date(gh.lastSyncAt).toLocaleString() : "Never synced";
 
-    $("cfg-current-version").textContent = LauncherUpdater.CURRENT_VERSION;
+    if (typeof AppVersion !== "undefined") {
+      $("cfg-current-version").textContent = AppVersion.isDevelop()
+        ? "v" + AppVersion.version + " [DEVELOP / rev." + AppVersion.revision + "]"
+        : "v" + AppVersion.version + " [PRODUCTION]";
+    } else {
+      $("cfg-current-version").textContent = LauncherUpdater.CURRENT_VERSION;
+    }
     $("cfg-update-repo").value = up.owner && up.repo ? up.owner + "/" + up.repo : up.repo || "";
     $("cfg-update-autocheck").checked = up.autoCheckOnLaunch !== false;
 
@@ -1014,7 +1020,16 @@
       }
     });
 
-    $("version-badge").textContent = "v" + LauncherUpdater.CURRENT_VERSION;
+    var badge = $("version-badge");
+    if (typeof AppVersion !== "undefined") {
+      badge.textContent = AppVersion.getDisplayBadge();
+      badge.className = "version-badge " + (AppVersion.isDevelop() ? "channel-develop" : "channel-production");
+      badge.title = AppVersion.isDevelop()
+        ? "Development Build (v" + AppVersion.version + ", Revision " + AppVersion.revision + ")"
+        : "Production Build (v" + AppVersion.version + ")";
+    } else {
+      badge.textContent = "v" + LauncherUpdater.CURRENT_VERSION;
+    }
 
     store.subscribe(renderItems);
     bindEvents();

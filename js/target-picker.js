@@ -629,6 +629,13 @@
       applyHostTheme(cs);
     });
 
+    if ($("picker-version-badge") && global.AppVersion) {
+      var badge = $("picker-version-badge");
+      badge.textContent = global.AppVersion.getShortBadge();
+      badge.className = "version-badge " + (global.AppVersion.isDevelop() ? "channel-develop" : "channel-production");
+      badge.title = global.AppVersion.getDisplayBadge();
+    }
+
     // Listen for live TARGET_REQUEST events if main panel dispatches another item while window is open
     cs.addEventListener("com.ae.tinyscripts.launcher.TARGET_REQUEST", function (event) {
       try {

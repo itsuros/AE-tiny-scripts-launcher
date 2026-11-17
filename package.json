@@ -10,6 +10,8 @@
   },
   "scripts": {
     "test": "node scripts/validate.js",
+    "bump:rev": "node scripts/bump-revision.js",
+    "setup:hooks": "git config core.hooksPath .githooks",
     "setup:mac": "bash scripts/install-dev.sh",
     "setup:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-dev.ps1"
   }

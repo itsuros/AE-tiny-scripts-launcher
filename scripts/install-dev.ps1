@@ -67,4 +67,10 @@ foreach ($ver in @(9, 10, 11, 12)) {
 }
 
 Write-Host "Enabled PlayerDebugMode for CSXS 9-12 in HKCU:\Software\Adobe\CSXS.*" -ForegroundColor Green
+
+if (Test-Path -LiteralPath (Join-Path $SrcDir ".git")) {
+    git -C $SrcDir config core.hooksPath .githooks 2>$null
+    Write-Host "Configured git core.hooksPath -> .githooks (auto revision bump on develop commits)." -ForegroundColor Green
+}
+
 Write-Host "Setup complete! Restart After Effects and open Window > Extensions > AE Tiny Scripts Launcher." -ForegroundColor Cyan

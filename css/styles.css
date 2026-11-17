@@ -108,9 +108,23 @@ body {
   font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-elevated);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.version-badge.channel-develop {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 600;
+}
+
+.version-badge.channel-production {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
 .update-dot {

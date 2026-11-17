@@ -3,6 +3,7 @@
   <ExtensionList>
     <Extension Id="com.ae.tinyscripts.launcher.panel" Version="0.0.0" />
     <Extension Id="com.ae.tinyscripts.launcher.targetpicker" Version="0.0.0" />
+    <Extension Id="com.ae.tinyscripts.launcher.help" Version="0.0.0" />
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>
@@ -78,6 +79,43 @@
             <MaxSize>
               <Height>920</Height>
               <Width>880</Width>
+            </MaxSize>
+          </Geometry>
+          <Icons>
+            <Icon Type="Normal">./assets/icon.svg</Icon>
+            <Icon Type="RollOver">./assets/icon.svg</Icon>
+            <Icon Type="DarkNormal">./assets/icon.svg</Icon>
+            <Icon Type="DarkRollOver">./assets/icon.svg</Icon>
+          </Icons>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+    <Extension Id="com.ae.tinyscripts.launcher.help">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./help.html</MainPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Modeless</Type>
+          <Geometry>
+            <Size>
+              <Height>640</Height>
+              <Width>560</Width>
+            </Size>
+            <MinSize>
+              <Height>380</Height>
+              <Width>360</Width>
+            </MinSize>
+            <MaxSize>
+              <Height>960</Height>
+              <Width>920</Width>
             </MaxSize>
           </Geometry>
           <Icons>

@@ -53,8 +53,10 @@ test("Version 0.0.0 consistency across package.json, manifest.xml, and updater.j
   assert.ok(manifest.indexOf('<Host Name="AEFT"') >= 0, "manifest must target AEFT");
   assert.ok(manifest.indexOf("<Parameter>--enable-nodejs</Parameter>") >= 0, "manifest must enable Node.js");
   assert.ok(manifest.indexOf("com.ae.tinyscripts.launcher.targetpicker") >= 0, "manifest must declare external targetpicker");
-  assert.ok(manifest.indexOf("<Type>Modeless</Type>") >= 0, "external targetpicker must use Modeless window");
+  assert.ok(manifest.indexOf("com.ae.tinyscripts.launcher.help") >= 0, "manifest must declare external help window");
+  assert.ok(manifest.indexOf("<Type>Modeless</Type>") >= 0, "external windows must use Modeless window");
   assert.ok(manifest.indexOf("<MainPath>./target-picker.html</MainPath>") >= 0, "targetpicker MainPath missing");
+  assert.ok(manifest.indexOf("<MainPath>./help.html</MainPath>") >= 0, "help MainPath missing");
 
   assert.strictEqual(global.LauncherUpdater.CURRENT_VERSION, "0.0.0");
 
@@ -72,7 +74,7 @@ test("LICENSE is MIT", function () {
   assert.ok(lic.indexOf("MIT License") >= 0);
 });
 
-test("index.html and target-picker.html reference all required scripts and stylesheet", function () {
+test("index.html, target-picker.html, and help.html reference required assets and UI controls", function () {
   var html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   [
     "css/styles.css",
@@ -90,9 +92,20 @@ test("index.html and target-picker.html reference all required scripts and style
     assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
   });
 
+  ["btn-toggle-search", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon"].forEach(
+    function (idOrClass) {
+      assert.ok(html.indexOf(idOrClass) >= 0, "Missing UI control in index.html: " + idOrClass);
+    }
+  );
+
   var pickerHtml = fs.readFileSync(path.join(ROOT, "target-picker.html"), "utf8");
   ["css/styles.css", "js/lib/CSInterface.js", "js/version.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {
     assert.ok(pickerHtml.indexOf(rel) >= 0, "Missing reference in target-picker.html: " + rel);
+  });
+
+  var helpHtml = fs.readFileSync(path.join(ROOT, "help.html"), "utf8");
+  ["css/styles.css", "js/lib/CSInterface.js", "js/version.js"].forEach(function (rel) {
+    assert.ok(helpHtml.indexOf(rel) >= 0, "Missing reference in help.html: " + rel);
   });
 });
 

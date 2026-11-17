@@ -1,69 +1,69 @@
 # AE Tiny Scripts Launcher
 
-A lightweight, dockable **Adobe After Effects CEP Extension** designed as a modern alternative to Launch Pad for managing and executing **Scripts (`.jsx` / `.jsxbin`)**, **Expressions**, and **Animation Presets (`.ffx`)**.
+**Adobe After Effects** 向けの軽量・ドッキング可能な **CEP エクステンション（Launch Pad 代替ツール）** です。**スクリプト（`.jsx` / `.jsxbin`）**、**エクスプレッション（Expression）**、**アニメーションプリセット（`.ffx`）** を一元管理し、素早く実行・適用できます。
 
-> **Current Version:** `0.0.0` (Pre-release; Semantic Versioning is used and the version remains `0.0.0` until the first public release.)
-
----
-
-## Features
-
-- **CEP Dockable Panel**: Built on Adobe CEP v11 (`CSXS 9.0+`, After Effects `16.0+`) with `--enable-nodejs` and automatic host UI theme adaptation (Dark/Light).
-- **Icon (Grid) & List Views**: Switch instantaneously between a compact icon grid (Small / Medium / Large) and a detailed list view.
-- **Custom Display Ordering**: Reorder items via Drag & Drop or explicit Up/Down controls (`⇅ Reorder`), or sort by Name (`A-Z` / `Z-A`) and Type.
-- **GitHub Repository Auto-Sync**: Automatically fetch and download scripts, expressions, and `.ffx` presets from a configurable GitHub repository (`owner/repo`, branch, subdirectory, and optional Personal Access Token).
-- **Manual Add / Edit / Delete**: Register local files or inline ExtendScript / Expression snippets alongside GitHub-synced items.
-- **Target Picker UI for Expressions & FFX**:
-  - **Expressions**: Apply to currently selected timeline properties, common Transform/Time Remap presets across selected/checked layers, or browse a layer's full expression-capable property tree. Supports **Replace / Append / Prepend** modes and **Keyframe Handling** (Keep / Freeze Current Value & Clear / Clear All).
-  - **FFX Presets**: Apply to AE selected layers, checked composition layers, or automatically create a **New Adjustment Layer**, **New Solid Layer**, or **New Null Object**. Supports **Time Anchor** (Current Playhead / Layer In-Point / Comp Start), clearing existing effects, and transform keyframe handling.
-- **Self Auto-Updater**: Checks GitHub Releases API for newer semantic versions, downloads the release archive, extracts it into the extension directory, and reloads the CEP panel.
+> **現在のバージョン:** `0.0.0`（プレリリース中。セマンティックバージョニングを採用し、ファーストリリースまでは `0.0.0` を維持します）
 
 ---
 
-## Directory Structure
+## 主な機能
+
+- **CEP ドッキングパネル**: Adobe CEP v11（`CSXS 9.0+` / After Effects `16.0+`）および `--enable-nodejs` に対応し、After Effects 本体のテーマカラー（ダーク / ライト）に自動追従します。
+- **アイコン型（グリッド）＆リスト型の表示切替**: コンパクトなアイコン型表示（Small / Medium / Large）と詳細なリスト型表示をワンクリックで切り替えられます。
+- **表示順の並び替え**: ドラッグ＆ドロップおよび上下移動ボタン（`⇅ Reorder`）によるカスタム順並び替えのほか、名前順（A-Z / Z-A）・種別順でのソートに対応しています。
+- **別 GitHub レポジトリからのスクリプト自動同期**: 指定した GitHub レポジトリ（`owner/repo`、ブランチ、サブディレクトリ、任意トークン）からスクリプト・エクスプレッション・`.ffx` を自動取得・ダウンロードします。
+- **手動での追加・編集・削除**: GitHub 同期アイテムとは別に、ローカルファイルやインラインの ExtendScript / Expression を手動で登録・編集・削除できます。
+- **Expression / FFX 適用先セレクタ UI**:
+  - **Expression**: 「AE タイムラインで選択中のプロパティ」「共通プロパティプリセット（Position / Scale / Rotation / Opacity / Anchor Point / Time Remap）」「レイヤープロパティツリー検索」から適用先を選択可能です。適用モード（置換 / 末尾追記 / 先頭挿入）やキーフレーム処理（保持 / 現在値で固定して削除 / 全削除）も指定できます。
+  - **FFX プリセット**: 「AE で選択中のレイヤー」「コンポ内レイヤーからチェック選択」「新規調整レイヤー」「新規平面」「新規ヌルオブジェクト」から適用先を選べます。適用時間基準（現在時刻 / インポイント / 0:00）、既存エフェクト削除、トランスフォームキーフレーム削除のオプションも備えています。
+- **本体自動アップデート機能**: GitHub Releases API を参照して新しいセマンティックバージョンを検知し、リリースアーカイブのダウンロード・展開・パネル再読み込みを行います。
+
+---
+
+## ディレクトリ構成
 
 ```text
 AE-tiny-scripts-launcher/
 ├── CSXS/
-│   └── manifest.xml          # Adobe CEP Extension Manifest (v11 / AEFT)
+│   └── manifest.xml          # Adobe CEP エクステンションマニフェスト (v11 / AEFT)
 ├── assets/
-│   └── icon.svg              # Panel icon
+│   └── icon.svg              # パネルアイコン
 ├── css/
-│   └── styles.css            # Spectrum-inspired adaptive CEP UI styles
+│   └── styles.css            # CEP テーマ適応型 UI スタイルシート
 ├── js/
 │   ├── lib/
-│   │   └── CSInterface.js    # Adobe CEP CSInterface wrapper (with browser mock fallback)
-│   ├── app.js                # Main UI controller & Target Picker modals
-│   ├── github-sync.js        # GitHub repository tree & raw file downloader
-│   ├── store.js              # Local JSON / localStorage persistence & custom ordering
-│   └── updater.js            # SemVer GitHub Releases self-updater
+│   │   └── CSInterface.js    # Adobe CEP CSInterface ラッパー（単体プレビュー用モック含む）
+│   ├── app.js                # メイン UI コントローラ＆適用先選択モーダル
+│   ├── github-sync.js        # GitHub レポジトリ走査・ファイル自動ダウンローダー
+│   ├── store.js              # ローカル永続化（JSON / localStorage）＆並び順管理
+│   └── updater.js            # SemVer 対応 GitHub Releases 自動アップデータ
 ├── jsx/
-│   └── hostscript.jsx        # After Effects ExtendScript bridge
+│   └── hostscript.jsx        # After Effects ExtendScript ホストブリッジ
 ├── scripts/
-│   ├── install-dev.sh        # macOS symlink + CSXS PlayerDebugMode setup script
-│   └── validate.js           # Node.js validation & unit test suite
-├── .debug                    # CEP remote debugging port configuration (8088)
-├── index.html                # Panel entry point
-├── package.json              # Package metadata (version 0.0.0)
-├── CHANGELOG.md              # Release & development changelog
-└── LICENSE                   # MIT License
+│   ├── install-dev.sh        # macOS 開発用シンボリックリンク & PlayerDebugMode 設定スクリプト
+│   └── validate.js           # Node.js 検証・単体テストスイート
+├── .debug                    # CEP リモートデバッグポート設定 (8088)
+├── AGENTS.md                 # AI エージェント向け開発・コミット規約
+├── index.html                # パネルエントリポイント
+├── package.json              # パッケージ定義 (version 0.0.0)
+├── CHANGELOG.md              # 変更履歴
+└── LICENSE                   # MIT ライセンス
 ```
 
 ---
 
-## Development & Installation (macOS)
+## 開発環境のセットアップ（macOS）
 
-1. Run the development symlink script to link the extension into Adobe CEP's extensions folder and enable `PlayerDebugMode`:
+1. 開発用セットアップスクリプトを実行し、CEP 拡張フォルダへのシンボリックリンク作成と `PlayerDebugMode` の有効化を行います。
    ```bash
    ./scripts/install-dev.sh
    ```
-   This symlinks the repository to:
-   `~/Library/Application Support/Adobe/CEP/extensions/com.ae.tinyscripts.launcher`
-2. Restart **Adobe After Effects**.
-3. Open **Window > Extensions > AE Tiny Scripts Launcher**.
-4. (Optional) Debug the panel in Chrome/Chromium at `http://localhost:8088`.
+   リンク先: `~/Library/Application Support/Adobe/CEP/extensions/com.ae.tinyscripts.launcher`
+2. **Adobe After Effects** を再起動します。
+3. メニューの **ウィンドウ > エクステンション > AE Tiny Scripts Launcher** からパネルを開きます。
+4. （任意）リモートデバッグを行う場合は Chrome 等で `http://localhost:8088` にアクセスします。
 
-### Running Tests
+### テストの実行
 
 ```bash
 npm test
@@ -71,34 +71,44 @@ npm test
 
 ---
 
-## GitHub Scripts Repository Conventions
+## GitHub スクリプト同期レポジトリの規約
 
-When configuring a GitHub repository in **Settings > GitHub Scripts Repository Sync**, the launcher recursively scans the configured branch (and optional subdirectory) and automatically classifies files by extension:
+**Settings > GitHub Scripts Repository Sync** で対象レポジトリを設定すると、指定ブランチ（および任意のサブディレクトリ）配下を再帰走査し、拡張子に応じて自動で種別を判定します。
 
-| Extension | Launcher Type |
+| 拡張子 | Launcher 上の種別 |
 | :--- | :--- |
 | `.jsx`, `.jsxbin` | **Script** |
 | `.expr.js`, `.expr.txt`, `.expr` | **Expression** |
 | `.ffx` | **Animation Preset (FFX)** |
 
-Downloaded files and launcher state are stored locally under:
+ダウンロード済みファイルおよび設定データはローカルの以下に保存されます。
 - macOS: `~/Library/Application Support/AETinyScriptsLauncher/`
 - Windows: `%APPDATA%\AETinyScriptsLauncher\`
 
 ---
 
-## Git Branching & Release Workflow
+## 開発ルール・Git ブランチ運用
 
-- `main`: Production/release branch (initialized with an empty root commit).
-- `develop`: Long-lived active integration branch (**do not delete**, even after releases).
-- `feat/*`, `fix/*`, `docs/*`: Feature, bugfix, and documentation branches created off `develop`, merged back into `develop`, and deleted after merge.
-- **Release Process**:
-  1. Bump the version consistently across `package.json`, `CSXS/manifest.xml`, `js/store.js`, `js/updater.js`, and `CHANGELOG.md`.
-  2. Open a Pull Request from `develop` to `main` and merge.
-  3. Create an annotated Git tag (e.g. `v0.1.0` or `v1.0.0`) on `main` and publish a GitHub Release so the built-in Self Auto-Updater can detect and install it.
+- **ドキュメント言語**: 本プロジェクトのドキュメント（README、CHANGELOG、設計メモ等）は**常に日本語**で記述します。
+- **ブランチ運用**:
+  - `main`: リリース用ブランチ（初期状態は空コミット）。
+  - `develop`: 恒久的な統合開発ブランチ（**リリース後も削除せず維持します**）。
+  - `feat/*`, `fix/*`, `docs/*`: `develop` から機能・作業単位で切り出し、`develop` へマージ後に削除します。
+- **リリース手順**:
+  1. `package.json`、`CSXS/manifest.xml`、`js/store.js`、`js/updater.js`、`CHANGELOG.md` のバージョンを一括更新します。
+  2. `develop` から `main` へ Pull Request を作成してマージします。
+  3. `main` にリリースタグ（例: `v0.1.0` / `v1.0.0`）を打ち、GitHub Release を公開します。
 
 ---
 
-## License
+## コントリビューター（Contributors）
 
-Licensed under the [MIT License](LICENSE).
+- **Itsuro Sasakura** — オーナー / 企画・要件定義
+- **Antigravity**（Google Antigravity）— AI コントリビューター（実装・コーディング・テスト・コミット担当）
+  - コミット時には GitHub 上でコントリビュートが識別できるよう、`Co-authored-by: Antigravity <noreply@google.com>` トレーラーを付与して運用します。
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE) の下で公開されています。

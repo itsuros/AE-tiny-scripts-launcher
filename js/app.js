@@ -233,7 +233,7 @@
         var typeLabel = item.type === "expression" ? "EXPR" : item.type === "ffx" ? "FFX" : "JSX";
         var itemVerLabel = item.version ? "v" + String(item.version).replace(/^v/i, "") : "";
         var itemVerBadge = itemVerLabel ? '<span class="badge badge-item-version">' + escapeHtml(itemVerLabel) + "</span>" : "";
-        var tooltipText = (item.description || item.name) + (itemVerLabel ? " (" + itemVerLabel + ")" : "");
+        var tooltipText = (item.description || item.filePath || item.name) + (itemVerLabel ? " (" + itemVerLabel + ")" : "");
         var sourceBadge =
           item.source === "github"
             ? '<span class="badge badge-github">GH</span>'
@@ -242,6 +242,16 @@
             : item.source === "local"
             ? '<span class="badge badge-local">DIR</span>'
             : "";
+        var customTagBadges = Array.isArray(item.tags)
+          ? item.tags
+              .filter(function (t) {
+                return t && t !== "local" && t !== "github" && t !== "tiny-local" && t !== "ae-tiny-scripts";
+              })
+              .map(function (t) {
+                return '<span class="badge badge-user-tag">' + escapeHtml(t) + "</span>";
+              })
+              .join("")
+          : "";
         var reorderBtns =
           '<button class="mini-btn" data-action="move-up" title="Move Up/Left">&#9650;</button>' +
           '<button class="mini-btn" data-action="move-down" title="Move Down/Right">&#9660;</button>';
@@ -273,6 +283,8 @@
             '<span class="list-name">' +
             escapeHtml(item.name) +
             "</span>" +
+            "</div>" +
+            '<div class="list-tags-row">' +
             '<span class="badge badge-' +
             escapeHtml(item.type) +
             '">' +
@@ -280,9 +292,7 @@
             "</span>" +
             itemVerBadge +
             sourceBadge +
-            "</div>" +
-            '<div class="list-desc">' +
-            escapeHtml(item.description || item.filePath || "Inline " + item.type) +
+            customTagBadges +
             "</div>" +
             "</div>" +
             '<div class="list-actions">' +

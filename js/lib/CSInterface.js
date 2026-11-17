@@ -129,3 +129,19 @@ CSInterface.prototype.getExtensionID = function () {
   }
   return "com.ae.tinyscripts.launcher.panel";
 };
+
+CSInterface.prototype.requestOpenExtension = function (extensionId, params) {
+  if (this.isCEPEnvironment()) {
+    window.__adobe_cep__.requestOpenExtension(extensionId, params || "");
+    return true;
+  }
+  return false;
+};
+
+CSInterface.prototype.closeExtension = function () {
+  if (this.isCEPEnvironment()) {
+    window.__adobe_cep__.closeExtension();
+  } else if (typeof window !== "undefined" && window.close) {
+    window.close();
+  }
+};

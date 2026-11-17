@@ -486,5 +486,57 @@
     return { added: added, updated: updated, removed: removed, total: syncedItems.length };
   };
 
+  var TARGET_REQUEST_KEY = "ae_tiny_scripts_launcher_pending_target_v1";
+
+  LauncherStore.prototype.getPendingTargetFilePath = function () {
+    if (!hasNode) return null;
+    return path.join(getDataDir(this.options.dataDir), "pending-target-request.json");
+  };
+
+  LauncherStore.prototype.savePendingTargetRequest = function (item) {
+    var payload = {
+      requestId: "req-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+      openedAt: new Date().toISOString(),
+      item: item
+    };
+    var serialized = JSON.stringify(payload);
+    var filePath = this.getPendingTargetFilePath();
+    if (hasNode && filePath) {
+      try {
+        fs.writeFileSync(filePath, serialized, "utf8");
+      } catch (e) {
+        console.warn("Failed to write pending target request:", e);
+      }
+    }
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem(TARGET_REQUEST_KEY, serialized);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return payload;
+  };
+
+  LauncherStore.prototype.loadPendingTargetRequest = function () {
+    var filePath = this.getPendingTargetFilePath();
+    if (hasNode && filePath && fs.existsSync(filePath)) {
+      try {
+        return JSON.parse(fs.readFileSync(filePath, "utf8"));
+      } catch (e) {
+        console.warn("Failed to read pending target request:", e);
+      }
+    }
+    if (typeof localStorage !== "undefined") {
+      try {
+        var raw = localStorage.getItem(TARGET_REQUEST_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return null;
+  };
+
   global.LauncherStore = LauncherStore;
 })(typeof window !== "undefined" ? window : global);

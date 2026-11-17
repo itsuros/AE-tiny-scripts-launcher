@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AE Tiny Scripts - Target Picker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="theme-dark external-picker-body">
+  <div class="picker-shell">
+    <header class="picker-header">
+      <div class="picker-title-group">
+        <span id="picker-type-badge" class="badge badge-expression">EXPR</span>
+        <h1 id="picker-window-title">Select Target</h1>
+      </div>
+      <button type="button" id="btn-picker-close-top" class="icon-btn" title="Close">&times;</button>
+    </header>
+
+    <!-- ==================== EXPRESSION TARGET & OPTIONS ==================== -->
+    <main id="picker-expr-view" class="picker-body hidden">
+      <div class="context-banner">
+        <div>
+          <strong>Comp:</strong> <span id="expr-comp-name">Checking After Effects...</span>
+        </div>
+        <button type="button" id="btn-expr-refresh" class="btn btn-secondary btn-xs">Refresh AE Selection</button>
+      </div>
+
+      <div class="form-group">
+        <label>Target Selection Mode</label>
+        <div class="radio-tabs" id="expr-target-modes">
+          <label class="radio-tab">
+            <input type="radio" name="exprTargetMode" value="selected_props" checked />
+            <span>Selected Properties</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="exprTargetMode" value="common_preset" />
+            <span>Common Property</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="exprTargetMode" value="specific_paths" />
+            <span>Layer Property Tree</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Panel 1: Currently Selected Properties -->
+      <div id="expr-panel-selected" class="target-panel">
+        <div class="panel-subtitle">Currently selected expression-capable properties in AE timeline:</div>
+        <div id="expr-selected-props-list" class="checklist-box checklist-tall"></div>
+      </div>
+
+      <!-- Panel 2: Common Property Preset + Layer Checklist -->
+      <div id="expr-panel-common" class="target-panel hidden">
+        <div class="form-group">
+          <label for="expr-common-preset">Target Property Preset</label>
+          <select id="expr-common-preset">
+            <option value="transform.position">Transform &gt; Position</option>
+            <option value="transform.scale">Transform &gt; Scale</option>
+            <option value="transform.rotation">Transform &gt; Rotation / Z Rotation</option>
+            <option value="transform.opacity">Transform &gt; Opacity</option>
+            <option value="transform.anchorPoint">Transform &gt; Anchor Point</option>
+            <option value="timeRemap">Layer &gt; Time Remap (auto-enables)</option>
+          </select>
+        </div>
+        <div class="panel-subtitle">Target Layers (leave all unchecked to apply to AE selected layers):</div>
+        <div id="expr-common-layers-list" class="checklist-box checklist-tall"></div>
+      </div>
+
+      <!-- Panel 3: Layer Property Tree Browser -->
+      <div id="expr-panel-tree" class="target-panel hidden">
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="expr-tree-layer">Layer</label>
+            <select id="expr-tree-layer"></select>
+          </div>
+          <div class="form-group">
+            <label for="expr-tree-search">Filter Property</label>
+            <input id="expr-tree-search" type="search" placeholder="e.g. Position, Blur, Color" />
+          </div>
+        </div>
+        <div id="expr-tree-props-list" class="checklist-box checklist-tall"></div>
+      </div>
+
+      <!-- Detailed Expression Options -->
+      <div class="options-card">
+        <div class="options-title">Application Options</div>
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="expr-apply-mode">Expression Mode</label>
+            <select id="expr-apply-mode">
+              <option value="replace">Replace existing expression</option>
+              <option value="append">Append below existing expression</option>
+              <option value="prepend">Prepend above existing expression</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="expr-keyframe-mode">Keyframe Handling</label>
+            <select id="expr-keyframe-mode">
+              <option value="keep">Keep existing keyframes</option>
+              <option value="freeze_current">Freeze current value &amp; remove keys</option>
+              <option value="clear_all">Clear all keyframes</option>
+            </select>
+          </div>
+        </div>
+        <label class="checkbox-inline">
+          <input type="checkbox" id="expr-enable-flag" checked />
+          <span>Enable expression immediately after applying</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="expr-code-preview">Expression Code <span class="hint">(editable before apply)</span></label>
+        <textarea id="expr-code-preview" rows="6"></textarea>
+      </div>
+    </main>
+
+    <!-- ==================== FFX TARGET & OPTIONS ==================== -->
+    <main id="picker-ffx-view" class="picker-body hidden">
+      <div class="context-banner">
+        <div class="form-group inline-comp-select">
+          <label for="ffx-comp-select">Target Comp:</label>
+          <select id="ffx-comp-select"></select>
+        </div>
+        <button type="button" id="btn-ffx-refresh" class="btn btn-secondary btn-xs">Refresh AE</button>
+      </div>
+
+      <div class="form-group">
+        <label>Target Layer Destination</label>
+        <div class="radio-grid" id="ffx-target-modes">
+          <label class="radio-tab">
+            <input type="radio" name="ffxTargetMode" value="selected_layers" checked />
+            <span>AE Selected Layers</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="ffxTargetMode" value="checked_layers" />
+            <span>Pick Layers Below</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="ffxTargetMode" value="new_adjustment" />
+            <span>+ New Adjustment Layer</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="ffxTargetMode" value="new_solid" />
+            <span>+ New Solid Layer</span>
+          </label>
+          <label class="radio-tab">
+            <input type="radio" name="ffxTargetMode" value="new_null" />
+            <span>+ New Null Object</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="ffx-layer-checklist-wrap" class="form-group">
+        <div class="panel-subtitle" id="ffx-layer-subtitle">Layers in Composition:</div>
+        <div id="ffx-layers-list" class="checklist-box checklist-tall"></div>
+      </div>
+
+      <div class="options-card">
+        <div class="options-title">Preset Application Options</div>
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="ffx-time-mode">Keyframe / Apply Time Anchor</label>
+            <select id="ffx-time-mode">
+              <option value="current_time">Current Playhead Time</option>
+              <option value="layer_in_point">Each Layer's In-Point</option>
+              <option value="comp_start">Composition Start (0:00)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ffx-keyframe-mode">Existing Transform Keys</label>
+            <select id="ffx-keyframe-mode">
+              <option value="keep">Keep existing transform keyframes</option>
+              <option value="clear_transform_keys">Clear transform keyframes first</option>
+            </select>
+          </div>
+        </div>
+        <label class="checkbox-inline">
+          <input type="checkbox" id="ffx-clear-effects" />
+          <span>Remove existing Effects on target layer(s) before applying preset</span>
+        </label>
+      </div>
+
+      <div class="file-path-preview">
+        <strong>FFX File:</strong> <span id="ffx-file-display"></span>
+      </div>
+    </main>
+
+    <!-- Empty / Fallback State -->
+    <main id="picker-empty-view" class="picker-body hidden">
+      <div class="empty-state">
+        <p>No Expression or FFX item selected.</p>
+        <p class="hint">Click an Expression or FFX preset in the AE Tiny Scripts Launcher panel.</p>
+      </div>
+    </main>
+
+    <footer class="picker-footer">
+      <label class="checkbox-inline">
+        <input type="checkbox" id="picker-keep-open" />
+        <span>Keep window open after apply</span>
+      </label>
+      <div class="picker-footer-actions">
+        <span id="picker-status-text" class="hint"></span>
+        <button type="button" id="btn-picker-cancel" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="btn-picker-apply" class="btn btn-primary">Apply</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="js/lib/CSInterface.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/target-picker.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (window.TargetPicker) {
+        window.TargetPicker.initStandalone();
+      }
+    });
+  </script>
+</body>
+</html>

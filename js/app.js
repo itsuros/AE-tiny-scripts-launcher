@@ -368,7 +368,52 @@
     }
   }
 
+  var inlineTargetPicker = null;
+
   // ==================== Launching Items ====================
+  function openExternalTargetPicker(item) {
+    store.savePendingTargetRequest(item);
+
+    if (csInterface.isCEPEnvironment()) {
+      csInterface.requestOpenExtension("com.ae.tinyscripts.launcher.targetpicker", "");
+      var evt = new CSEvent(
+        "com.ae.tinyscripts.launcher.TARGET_REQUEST",
+        "APPLICATION",
+        "AEFT",
+        "com.ae.tinyscripts.launcher.targetpicker"
+      );
+      evt.data = JSON.stringify({ item: item });
+      csInterface.dispatchEvent(evt);
+      setStatus("Opened Target Picker window for: " + item.name);
+      return;
+    }
+
+    // Standalone browser preview: open external popup window first, fall back to inline modal if blocked
+    var popup = null;
+    if (typeof window.open === "function") {
+      popup = window.open("target-picker.html", "AETinyTargetPicker", "width=540,height=640,resizable=yes");
+    }
+    if (popup) {
+      setStatus("Opened Target Picker window for: " + item.name);
+      return;
+    }
+
+    if (!inlineTargetPicker && globalTargetPicker()) {
+      inlineTargetPicker = new globalTargetPicker().Controller({
+        csInterface: csInterface,
+        standalone: false,
+        onStatus: setStatus
+      });
+    }
+    if (inlineTargetPicker) {
+      inlineTargetPicker.openItem(item);
+    }
+  }
+
+  function globalTargetPicker() {
+    return typeof window !== "undefined" ? window.TargetPicker : null;
+  }
+
   function launchItem(item) {
     if (item.type === "script") {
       setStatus("Running script: " + item.name + "...");
@@ -387,10 +432,8 @@
           setStatus("Error: " + res.error, "error");
         }
       });
-    } else if (item.type === "expression") {
-      openExpressionModal(item);
-    } else if (item.type === "ffx") {
-      openFfxModal(item);
+    } else if (item.type === "expression" || item.type === "ffx") {
+      openExternalTargetPicker(item);
     }
   }
 
@@ -470,345 +513,6 @@
       $("item-type").value = "script";
     }
     updateItemFormVisibility();
-  }
-
-  // ==================== Expression Target Modal ====================
-  function openExpressionModal(item) {
-    uiState.activeExpressionItem = item;
-    $("expr-modal-title").textContent = "Apply Expression: " + item.name;
-    $("expr-code-preview").value = item.code || "";
-    $("expr-common-preset").value = item.defaultTargetPreset || "transform.position";
-    $("expr-apply-mode").value = item.defaultApplyMode || "replace";
-    $("expr-keyframe-mode").value = item.defaultKeyframeMode || "keep";
-    $("expr-enable-flag").checked = true;
-
-    // Load code from file if code is empty and filePath exists in Node
-    if (!item.code && item.filePath && typeof require === "function") {
-      try {
-        var req = typeof cep_node !== "undefined" && cep_node.require ? cep_node.require : require;
-        var fs = req("fs");
-        if (fs.existsSync(item.filePath)) {
-          $("expr-code-preview").value = fs.readFileSync(item.filePath, "utf8");
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-
-    openModal("modal-expression");
-    refreshExpressionContext();
-  }
-
-  function refreshExpressionContext() {
-    $("expr-comp-name").textContent = "Loading AE context...";
-    fetchAEContext().then(function (ctx) {
-      if (!ctx.ok) {
-        $("expr-comp-name").textContent = "Error: " + ctx.error;
-        return;
-      }
-      if (!ctx.activeComp) {
-        $("expr-comp-name").textContent = "No active composition open";
-      } else {
-        $("expr-comp-name").textContent = ctx.activeComp.name + " (" + ctx.layers.length + " layers)";
-      }
-
-      // Populate Selected Properties list
-      var selPropsEl = $("expr-selected-props-list");
-      if (!ctx.selectedProps || ctx.selectedProps.length === 0) {
-        selPropsEl.innerHTML =
-          '<div class="checklist-empty">No timeline properties selected in After Effects. Select a property or switch to "Common Property" / "Layer Property Tree".</div>';
-      } else {
-        selPropsEl.innerHTML = ctx.selectedProps
-          .map(function (p) {
-            var statusTag = p.canSetExpression ? "" : " (cannot set expression)";
-            var keyTag = p.numKeys > 0 ? " [" + p.numKeys + " keys]" : "";
-            return (
-              '<div class="checklist-item">' +
-              "<span><strong>#" +
-              p.layerIndex +
-              " " +
-              escapeHtml(p.layerName) +
-              "</strong> &rarr; " +
-              escapeHtml(p.pathNames) +
-              keyTag +
-              statusTag +
-              "</span></div>"
-            );
-          })
-          .join("");
-      }
-
-      // Populate Common Layers Checklist
-      var commonLayersEl = $("expr-common-layers-list");
-      if (!ctx.layers || ctx.layers.length === 0) {
-        commonLayersEl.innerHTML = '<div class="checklist-empty">No layers in active composition.</div>';
-      } else {
-        commonLayersEl.innerHTML = ctx.layers
-          .map(function (l) {
-            return (
-              '<label class="checklist-item">' +
-              '<input type="checkbox" class="expr-common-layer-cb" value="' +
-              l.index +
-              '" ' +
-              (l.selected ? "checked" : "") +
-              " />" +
-              "<span>#" +
-              l.index +
-              " " +
-              escapeHtml(l.name) +
-              (l.selected ? " <em>(AE Selected)</em>" : "") +
-              "</span></label>"
-            );
-          })
-          .join("");
-      }
-
-      // Populate Layer dropdown for Property Tree
-      var treeLayerSel = $("expr-tree-layer");
-      treeLayerSel.innerHTML = "";
-      if (ctx.layers && ctx.layers.length > 0) {
-        ctx.layers.forEach(function (l) {
-          var opt = document.createElement("option");
-          opt.value = l.index;
-          opt.textContent = "#" + l.index + " " + l.name + (l.selected ? " *" : "");
-          if (l.selected) opt.selected = true;
-          treeLayerSel.appendChild(opt);
-        });
-        loadLayerPropertyTree();
-      } else {
-        $("expr-tree-props-list").innerHTML = '<div class="checklist-empty">No layers available.</div>';
-      }
-    });
-  }
-
-  function loadLayerPropertyTree() {
-    var ctx = uiState.aeContext;
-    var layerIndex = Number($("expr-tree-layer").value);
-    if (!ctx || !ctx.activeComp || !layerIndex) return;
-
-    $("expr-tree-props-list").innerHTML = '<div class="checklist-empty">Scanning layer properties...</div>';
-
-    if (ctx.mock) {
-      uiState.layerPropertiesCache = [
-        { name: "Anchor Point", pathNames: "Transform > Anchor Point", indices: [2, 1], hasExpression: false, numKeys: 0 },
-        { name: "Position", pathNames: "Transform > Position", indices: [2, 2], hasExpression: false, numKeys: 0 },
-        { name: "Scale", pathNames: "Transform > Scale", indices: [2, 6], hasExpression: false, numKeys: 0 },
-        { name: "Rotation", pathNames: "Transform > Rotation", indices: [2, 10], hasExpression: false, numKeys: 0 },
-        { name: "Opacity", pathNames: "Transform > Opacity", indices: [2, 11], hasExpression: false, numKeys: 0 }
-      ];
-      renderLayerPropertyTreeList();
-      return;
-    }
-
-    evalHostFunction("AETinyLauncherHost.getLayerProperties(" + Number(ctx.activeComp.id) + ", " + layerIndex + ")").then(
-      function (res) {
-        if (!res.ok) {
-          $("expr-tree-props-list").innerHTML = '<div class="checklist-empty">' + escapeHtml(res.error) + "</div>";
-          return;
-        }
-        uiState.layerPropertiesCache = res.properties || [];
-        renderLayerPropertyTreeList();
-      }
-    );
-  }
-
-  function renderLayerPropertyTreeList() {
-    var search = $("expr-tree-search").value.trim().toLowerCase();
-    var layerIndex = Number($("expr-tree-layer").value);
-    var props = uiState.layerPropertiesCache.filter(function (p) {
-      return !search || p.pathNames.toLowerCase().indexOf(search) >= 0;
-    });
-
-    var container = $("expr-tree-props-list");
-    if (props.length === 0) {
-      container.innerHTML = '<div class="checklist-empty">No matching expression-capable properties found.</div>';
-      return;
-    }
-
-    container.innerHTML = props
-      .map(function (p) {
-        var meta = (p.hasExpression ? " [expr]" : "") + (p.numKeys > 0 ? " [" + p.numKeys + " keys]" : "");
-        return (
-          '<label class="checklist-item">' +
-          '<input type="checkbox" class="expr-tree-prop-cb" data-layer="' +
-          layerIndex +
-          '" data-indices="' +
-          escapeHtml(JSON.stringify(p.indices)) +
-          '" />' +
-          "<span>" +
-          escapeHtml(p.pathNames) +
-          '<span class="hint">' +
-          escapeHtml(meta) +
-          "</span></span></label>"
-        );
-      })
-      .join("");
-  }
-
-  function switchExprTargetPanel() {
-    var mode = document.querySelector('input[name="exprTargetMode"]:checked').value;
-    $("expr-panel-selected").classList.toggle("hidden", mode !== "selected_props");
-    $("expr-panel-common").classList.toggle("hidden", mode !== "common_preset");
-    $("expr-panel-tree").classList.toggle("hidden", mode !== "specific_paths");
-  }
-
-  function executeApplyExpression() {
-    var mode = document.querySelector('input[name="exprTargetMode"]:checked').value;
-    var code = $("expr-code-preview").value;
-    if (!code.trim()) {
-      setStatus("Expression code is empty.", "error");
-      return;
-    }
-
-    var layerIndices = [];
-    document.querySelectorAll(".expr-common-layer-cb:checked").forEach(function (cb) {
-      layerIndices.push(Number(cb.value));
-    });
-
-    var specificTargets = [];
-    document.querySelectorAll(".expr-tree-prop-cb:checked").forEach(function (cb) {
-      specificTargets.push({
-        layerIndex: Number(cb.getAttribute("data-layer")),
-        indices: JSON.parse(cb.getAttribute("data-indices"))
-      });
-    });
-
-    var payload = {
-      compId: uiState.aeContext && uiState.aeContext.activeComp ? uiState.aeContext.activeComp.id : null,
-      targetMode: mode,
-      commonPresetId: $("expr-common-preset").value,
-      layerIndices: layerIndices,
-      specificTargets: specificTargets,
-      expressionCode: code,
-      applyMode: $("expr-apply-mode").value,
-      keyframeMode: $("expr-keyframe-mode").value,
-      enableExpression: $("expr-enable-flag").checked
-    };
-
-    setStatus("Applying expression...");
-    evalHostFunction("AETinyLauncherHost.applyExpressionWithOptions(" + JSON.stringify(JSON.stringify(payload)) + ")").then(
-      function (res) {
-        if (res.ok) {
-          setStatus(res.message || "Expression applied.", "success");
-          closeModal("modal-expression");
-        } else {
-          setStatus("Expression Error: " + res.error, "error");
-          window.alert("Expression Apply Error:\n" + res.error);
-        }
-      }
-    );
-  }
-
-  // ==================== FFX Target Modal ====================
-  function openFfxModal(item) {
-    uiState.activeFfxItem = item;
-    $("ffx-modal-title").textContent = "Apply FFX: " + item.name;
-    $("ffx-file-display").textContent = item.filePath || "(No file path set - edit item to select a .ffx file)";
-    $("ffx-time-mode").value = item.defaultTimeMode || "current_time";
-    $("ffx-keyframe-mode").value = "keep";
-    $("ffx-clear-effects").checked = false;
-
-    var defaultMode = item.defaultTargetLayerMode || "selected_layers";
-    var radio = document.querySelector('input[name="ffxTargetMode"][value="' + defaultMode + '"]');
-    if (radio) radio.checked = true;
-
-    openModal("modal-ffx");
-    refreshFfxContext();
-  }
-
-  function refreshFfxContext() {
-    fetchAEContext().then(function (ctx) {
-      var compSel = $("ffx-comp-select");
-      compSel.innerHTML = "";
-      if (!ctx.ok || !ctx.comps || ctx.comps.length === 0) {
-        var optEmpty = document.createElement("option");
-        optEmpty.value = "";
-        optEmpty.textContent = "No compositions open in AE";
-        compSel.appendChild(optEmpty);
-      } else {
-        ctx.comps.forEach(function (c) {
-          var opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = c.name + " (" + c.numLayers + " layers)";
-          if (ctx.activeComp && c.id === ctx.activeComp.id) opt.selected = true;
-          compSel.appendChild(opt);
-        });
-      }
-
-      var layersBox = $("ffx-layers-list");
-      if (!ctx.layers || ctx.layers.length === 0) {
-        layersBox.innerHTML = '<div class="checklist-empty">No layers in active composition.</div>';
-      } else {
-        layersBox.innerHTML = ctx.layers
-          .map(function (l) {
-            return (
-              '<label class="checklist-item">' +
-              '<input type="checkbox" class="ffx-layer-cb" value="' +
-              l.index +
-              '" ' +
-              (l.selected ? "checked" : "") +
-              " />" +
-              "<span>#" +
-              l.index +
-              " " +
-              escapeHtml(l.name) +
-              (l.selected ? " <em>(AE Selected)</em>" : "") +
-              "</span></label>"
-            );
-          })
-          .join("");
-      }
-      updateFfxLayerListVisibility();
-    });
-  }
-
-  function updateFfxLayerListVisibility() {
-    var mode = document.querySelector('input[name="ffxTargetMode"]:checked').value;
-    var needsList = mode === "selected_layers" || mode === "checked_layers";
-    $("ffx-layer-checklist-wrap").classList.toggle("hidden", !needsList);
-    if (mode === "selected_layers") {
-      $("ffx-layer-subtitle").textContent = "Preview of AE selected layers (applied to AE timeline selection):";
-    } else if (mode === "checked_layers") {
-      $("ffx-layer-subtitle").textContent = "Check the specific layers to apply this FFX preset to:";
-    }
-  }
-
-  function executeApplyFfx() {
-    var item = uiState.activeFfxItem;
-    if (!item || !item.filePath) {
-      setStatus("Missing .ffx file path.", "error");
-      window.alert("Please edit this FFX item and specify a valid .ffx file path.");
-      return;
-    }
-
-    var mode = document.querySelector('input[name="ffxTargetMode"]:checked').value;
-    var layerIndices = [];
-    document.querySelectorAll(".ffx-layer-cb:checked").forEach(function (cb) {
-      layerIndices.push(Number(cb.value));
-    });
-
-    var payload = {
-      compId: $("ffx-comp-select").value ? Number($("ffx-comp-select").value) : null,
-      ffxPath: item.filePath,
-      targetLayerMode: mode,
-      layerIndices: layerIndices,
-      timeMode: $("ffx-time-mode").value,
-      clearExistingEffects: $("ffx-clear-effects").checked,
-      keyframeMode: $("ffx-keyframe-mode").value
-    };
-
-    setStatus("Applying FFX preset: " + item.name + "...");
-    evalHostFunction("AETinyLauncherHost.applyFFXWithOptions(" + JSON.stringify(JSON.stringify(payload)) + ")").then(
-      function (res) {
-        if (res.ok) {
-          setStatus(res.message || "FFX applied.", "success");
-          closeModal("modal-ffx");
-        } else {
-          setStatus("FFX Error: " + res.error, "error");
-          window.alert("FFX Apply Error:\n" + res.error);
-        }
-      }
-    );
   }
 
   // ==================== Settings, GitHub Sync & Self-Update ====================
@@ -1065,22 +769,6 @@
       closeModal("modal-item");
     });
 
-    // Expression Modal Events
-    $("btn-expr-refresh").addEventListener("click", refreshExpressionContext);
-    document.querySelectorAll('input[name="exprTargetMode"]').forEach(function (r) {
-      r.addEventListener("change", switchExprTargetPanel);
-    });
-    $("expr-tree-layer").addEventListener("change", loadLayerPropertyTree);
-    $("expr-tree-search").addEventListener("input", renderLayerPropertyTreeList);
-    $("btn-expr-apply").addEventListener("click", executeApplyExpression);
-
-    // FFX Modal Events
-    $("btn-ffx-refresh").addEventListener("click", refreshFfxContext);
-    document.querySelectorAll('input[name="ffxTargetMode"]').forEach(function (r) {
-      r.addEventListener("change", updateFfxLayerListVisibility);
-    });
-    $("btn-ffx-apply").addEventListener("click", executeApplyFfx);
-
     // Settings & Updater Events
     $("btn-save-settings").addEventListener("click", saveSettingsFromModal);
     $("btn-settings-sync-now").addEventListener("click", function () {
@@ -1103,6 +791,28 @@
   function init() {
     applyHostTheme();
     csInterface.addEventListener(CSInterface.THEME_COLOR_CHANGED_EVENT, applyHostTheme);
+    csInterface.addEventListener("com.ae.tinyscripts.launcher.TARGET_RESULT", function (event) {
+      try {
+        var res = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        if (res && res.message) {
+          setStatus(res.message, res.ok ? "success" : "error");
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+    window.addEventListener("storage", function (e) {
+      if (e.key === "ae_tiny_scripts_launcher_target_result_v1" && e.newValue) {
+        try {
+          var res = JSON.parse(e.newValue);
+          if (res && res.message) {
+            setStatus(res.message, res.ok ? "success" : "error");
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+    });
 
     $("version-badge").textContent = "v" + LauncherUpdater.CURRENT_VERSION;
 

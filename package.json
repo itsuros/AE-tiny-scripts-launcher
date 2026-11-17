@@ -1,0 +1,14 @@
+{
+  "name": "ae-tiny-scripts-launcher",
+  "version": "0.0.0",
+  "description": "Adobe After Effects CEP Script, Expression, and FFX Preset Launcher with GitHub Sync and Auto-Update",
+  "license": "MIT",
+  "author": "Itsuro Sasakura",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "test": "node scripts/validate.js"
+  }
+}

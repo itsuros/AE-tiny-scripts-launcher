@@ -88,12 +88,14 @@ body {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  flex: 1;
 }
 
 .brand-icon {
   color: var(--accent);
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .brand-title {
@@ -105,6 +107,9 @@ body {
 }
 
 .version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-elevated);
@@ -112,6 +117,32 @@ body {
   border-radius: 10px;
   border: 1px solid var(--border-color);
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.version-icon {
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 390px) {
+  .version-badge {
+    padding: 2px 5px;
+    border-radius: var(--radius-sm);
+  }
+  .version-icon {
+    display: inline-flex;
+  }
+  .version-badge-text {
+    display: none;
+  }
+}
+
+@media (max-width: 280px) {
+  .brand-title {
+    display: none;
+  }
 }
 
 .version-badge.channel-develop {
@@ -140,6 +171,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -201,34 +233,28 @@ body {
   border-left: none;
 }
 
-.search-box {
-  position: relative;
+.toolbar-search {
+  justify-content: space-between;
+}
+
+.search-input-wrap {
   flex: 1;
   min-width: 0;
 }
 
-.search-icon {
-  position: absolute;
-  left: 7px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-box input {
+.search-input-wrap input {
   width: 100%;
   height: 24px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  padding: 0 6px 0 24px;
+  padding: 0 7px;
   font-size: 11px;
   outline: none;
 }
 
-.search-box input:focus {
+.search-input-wrap input:focus {
   border-color: var(--accent);
 }
 
@@ -285,6 +311,29 @@ body {
   color: var(--text-secondary);
   min-width: 26px;
   text-align: right;
+}
+
+.scale-reset-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scale-reset-btn:hover {
+  color: var(--accent);
+}
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .filter-pills {
@@ -1027,4 +1076,22 @@ body.external-picker-body {
 
 .status-error {
   color: var(--danger);
+}
+
+.help-body h3 {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.help-list {
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.help-list strong {
+  color: var(--text-primary);
 }

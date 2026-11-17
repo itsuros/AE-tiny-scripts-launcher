@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AE Tiny Scripts Launcher - ヘルプ</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="theme-dark external-picker-body">
+  <div class="picker-shell">
+    <header class="picker-header">
+      <div class="picker-title-group">
+        <span class="badge badge-script">HELP</span>
+        <h1>AE Tiny Scripts Launcher ヘルプ</h1>
+        <span id="help-version-badge" class="version-badge"></span>
+      </div>
+      <button type="button" id="btn-help-close-top" class="icon-btn" title="閉じる">&times;</button>
+    </header>
+
+    <main class="picker-body help-body">
+      <section class="settings-section">
+        <h3>1. 概要とバージョン表示</h3>
+        <p class="section-desc">
+          Adobe After Effects 向けの Script（<code>.jsx</code> / <code>.jsxbin</code>）、Expression、Animation Preset（<code>.ffx</code>）を一元管理・実行できる CEP パネルです。
+        </p>
+        <ul class="help-list">
+          <li><strong>DEV（開発版）</strong>: <code>DEV v0.0.0 (rev.N)</code> のようにコミットごとのリビジョンを表示します。</li>
+          <li><strong>PROD（本番版）</strong>: <code>v0.0.0</code> のようにリビジョンを省いた正式表記で表示します。</li>
+          <li>パネルの横幅を狭くした場合は、バージョン表示がコンパクトなアイコンに自動で切り替わります（マウスオーバーで詳細を確認できます）。</li>
+        </ul>
+      </section>
+
+      <section class="settings-section">
+        <h3>2. 表示切替・カードサイズ・検索・並び替え</h3>
+        <ul class="help-list">
+          <li><strong>アイコン型 / リスト型切替</strong>: ツールバー右上の切替ボタンで表示形式を切り替えられます。</li>
+          <li><strong>カードサイズ変更・リセット</strong>: <code>Size</code> スライダー（55%〜140%）でアイコンカード全体のサイズを調整し、一度に多くのツールを表示できます。右側の <code>↺</code> ボタンで 100% にリセットできます。</li>
+          <li><strong>検索</strong>: 虫眼鏡アイコンボタンをクリックすると検索バーが開き、名前・種別・タグ・説明で絞り込みできます。</li>
+          <li><strong>並び替え</strong>: <code>Custom Order</code> 選択時はドラッグ＆ドロップ、または <code>⇅ Reorder</code> モードの上下ボタンで表示順を変更できます。</li>
+        </ul>
+      </section>
+
+      <section class="settings-section">
+        <h3>3. Script・Expression・FFX の実行と適用先選択</h3>
+        <ul class="help-list">
+          <li><strong>Script（JSX / JSXBIN）</strong>: クリックすると即座に After Effects 上で実行されます。</li>
+          <li><strong>Expression / FFX</strong>: クリックすると CEP パネル外に独立したフローティングウィンドウが開き、適用先や詳細オプションを指定して適用できます。</li>
+          <li><strong>Expression 適用オプション</strong>: 選択中プロパティ / 共通プリセット / レイヤープロパティツリー検索から選択でき、置換・追記・先頭挿入やキーフレーム処理（保持 / 現在値フリーズ削除 / 全削除）を指定できます。</li>
+          <li><strong>FFX 適用オプション</strong>: AE 選択レイヤー / チェック選択 / 新規調整レイヤー / 新規平面 / 新規ヌルへの適用や、時間基準（現在時刻 / インポイント / 0:00）、既存エフェクト削除を指定できます。</li>
+        </ul>
+      </section>
+
+      <section class="settings-section">
+        <h3>4. 複数ローカルフォルダ・GitHub 同期・同名アイコン</h3>
+        <ul class="help-list">
+          <li><strong>ローカルフォルダ読み込み</strong>: Settings の「Local Script Folders」に複数のフォルダを登録すると、配下のファイルを再帰スキャンして自動登録します（ツールバーのフォルダボタンからいつでも再スキャン可能）。</li>
+          <li><strong>GitHub レポジトリ同期</strong>: Settings の「GitHub Scripts Repository Sync」に <code>owner/repo</code> 等を設定すると、対象ファイルを自動ダウンロードします。</li>
+          <li><strong>同名画像の既定アイコン化</strong>: スクリプトと同じディレクトリに同名の画像（<code>.png</code>, <code>.svg</code>, <code>.jpg</code> 等）が配置されている場合、自動的に既定アイコンとして表示されます。</li>
+        </ul>
+      </section>
+
+      <section class="settings-section">
+        <h3>5. 本体自動アップデート</h3>
+        <p class="section-desc">
+          Settings の「Launcher Self-Update」でリリース元 GitHub レポジトリを設定すると、GitHub Releases API から新しいバージョンを確認し、ワンクリックでダウンロード・更新できます。
+        </p>
+      </section>
+    </main>
+
+    <footer class="picker-footer">
+      <span class="hint">MIT License &bull; AE Tiny Scripts Launcher</span>
+      <button type="button" id="btn-help-close" class="btn btn-primary">閉じる</button>
+    </footer>
+  </div>
+
+  <script src="js/lib/CSInterface.js"></script>
+  <script src="js/version.js"></script>
+  <script>
+    (function () {
+      var cs = new CSInterface();
+
+      function applyTheme() {
+        try {
+          var env = cs.getHostEnvironment();
+          var bg = env && env.appSkinInfo && env.appSkinInfo.panelBackgroundColor && env.appSkinInfo.panelBackgroundColor.color;
+          if (bg) {
+            var lum = 0.2126 * bg.red + 0.7152 * bg.green + 0.0722 * bg.blue;
+            document.body.classList.toggle("theme-light", lum > 140);
+            document.body.classList.toggle("theme-dark", lum <= 140);
+            document.documentElement.style.setProperty(
+              "--bg-app",
+              "rgb(" + Math.round(bg.red) + "," + Math.round(bg.green) + "," + Math.round(bg.blue) + ")"
+            );
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        applyTheme();
+        cs.addEventListener(CSInterface.THEME_COLOR_CHANGED_EVENT, applyTheme);
+
+        var badge = document.getElementById("help-version-badge");
+        if (badge && typeof AppVersion !== "undefined") {
+          badge.textContent = AppVersion.getDisplayBadge();
+          badge.className = "version-badge " + (AppVersion.isDevelop() ? "channel-develop" : "channel-production");
+        }
+
+        function closeHelp() {
+          cs.closeExtension();
+        }
+        document.getElementById("btn-help-close-top").addEventListener("click", closeHelp);
+        document.getElementById("btn-help-close").addEventListener("click", closeHelp);
+      });
+    })();
+  </script>
+</body>
+</html>

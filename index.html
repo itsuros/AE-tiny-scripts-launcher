@@ -18,7 +18,16 @@
             </svg>
           </span>
           <span class="brand-title">Tiny Scripts</span>
-          <span id="version-badge" class="version-badge" title="Current Version">DEV v0.0.0 (rev.26)</span>
+          <span id="version-badge" class="version-badge" title="Current Version">
+            <span class="version-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+            </span>
+            <span id="version-badge-text" class="version-badge-text">DEV v0.0.0 (rev.26)</span>
+          </span>
           <span id="update-dot" class="update-dot hidden" title="Update available!"></span>
         </div>
 
@@ -70,13 +79,15 @@
         </div>
       </div>
 
-      <!-- Search + Sort -->
+      <!-- Search (Icon-only toggle) + Sort -->
       <div class="toolbar-row toolbar-search">
-        <div class="search-box">
-          <svg class="search-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btn-toggle-search" class="icon-btn" title="検索" aria-label="検索" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
+        </button>
+        <div id="search-input-wrap" class="search-input-wrap hidden">
           <input id="search-input" type="search" placeholder="Search scripts, expressions, ffx..." autocomplete="off" />
         </div>
         <select id="sort-select" class="compact-select" title="Sort Order">
@@ -100,6 +111,7 @@
             <span class="scale-label-icon">Size</span>
             <input id="card-scale-slider" type="range" min="55" max="140" step="5" value="100" aria-label="Card Size" />
             <span id="card-scale-label" class="scale-value">100%</span>
+            <button type="button" id="btn-reset-card-scale" class="scale-reset-btn" title="サイズをリセット (100%)" aria-label="Reset Card Size">&#8634;</button>
           </div>
           <button id="btn-reorder-mode" class="pill pill-outline" title="Toggle explicit reorder controls">
             ⇅ Reorder
@@ -408,7 +420,16 @@
   <div id="modal-settings" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal-card modal-lg">
       <div class="modal-header">
-        <h2>Settings &amp; Updates</h2>
+        <div class="modal-header-title">
+          <h2>Settings &amp; Updates</h2>
+          <button type="button" id="btn-open-help" class="icon-btn" title="ヘルプを別ウィンドウで開く" aria-label="ヘルプを別ウィンドウで開く">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </button>
+        </div>
         <button class="icon-btn modal-close" data-close="modal-settings" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
@@ -507,7 +528,10 @@
           <div class="form-row two-col">
             <div class="form-group">
               <label for="cfg-card-scale">Icon Card Scale (<span id="cfg-card-scale-label">100%</span>)</label>
-              <input id="cfg-card-scale" type="range" min="55" max="140" step="5" value="100" />
+              <div class="input-with-btn">
+                <input id="cfg-card-scale" type="range" min="55" max="140" step="5" value="100" />
+                <button type="button" id="btn-cfg-reset-card-scale" class="btn btn-secondary btn-xs" title="サイズを 100% にリセット">Reset</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="cfg-view-mode">Default View Mode</label>

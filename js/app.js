@@ -847,9 +847,33 @@
     $("sort-select").addEventListener("change", function (e) {
       store.updateSettings({ sortBy: e.target.value });
     });
+    $("btn-toggle-search").addEventListener("click", function () {
+      var wrap = $("search-input-wrap");
+      var willShow = wrap.classList.contains("hidden");
+      wrap.classList.toggle("hidden", !willShow);
+      $("btn-toggle-search").setAttribute("aria-expanded", String(willShow));
+      if (willShow) {
+        $("search-input").focus();
+      } else {
+        $("btn-toggle-search").classList.toggle("active", uiState.searchQuery.trim().length > 0);
+      }
+    });
     $("search-input").addEventListener("input", function (e) {
       uiState.searchQuery = e.target.value;
+      $("btn-toggle-search").classList.toggle("active", uiState.searchQuery.trim().length > 0);
       renderItems();
+    });
+    $("search-input").addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        if ($("search-input").value) {
+          $("search-input").value = "";
+          uiState.searchQuery = "";
+          renderItems();
+        }
+        $("search-input-wrap").classList.add("hidden");
+        $("btn-toggle-search").setAttribute("aria-expanded", "false");
+        $("btn-toggle-search").classList.remove("active");
+      }
     });
     $("type-filters").addEventListener("click", function (e) {
       var pill = e.target.closest("[data-type]");
@@ -880,6 +904,10 @@
     $("card-scale-slider").addEventListener("input", function (e) {
       var val = Number(e.target.value) || 100;
       store.updateSettings({ cardScale: val });
+    });
+    $("btn-reset-card-scale").addEventListener("click", function () {
+      store.updateSettings({ cardScale: 100 });
+      setStatus("Card size reset to 100%.");
     });
     $("btn-settings").addEventListener("click", openSettingsModal);
 
@@ -943,8 +971,20 @@
     });
 
     // Settings & Updater Events
+    $("btn-open-help").addEventListener("click", function () {
+      if (csInterface.isCEPEnvironment()) {
+        csInterface.requestOpenExtension("com.ae.tinyscripts.launcher.help", "");
+      } else {
+        window.open("help.html", "AETinyScriptsHelp", "width=560,height=640,resizable=yes");
+      }
+    });
     $("cfg-card-scale").addEventListener("input", function (e) {
       $("cfg-card-scale-label").textContent = e.target.value + "%";
+    });
+    $("btn-cfg-reset-card-scale").addEventListener("click", function () {
+      $("cfg-card-scale").value = 100;
+      $("cfg-card-scale-label").textContent = "100%";
+      store.updateSettings({ cardScale: 100 });
     });
     $("btn-browse-local-folder").addEventListener("click", function () {
       if (typeof cep !== "undefined" && cep.fs && cep.fs.showOpenDialog) {
@@ -1021,12 +1061,20 @@
     });
 
     var badge = $("version-badge");
+    var badgeText = $("version-badge-text");
     if (typeof AppVersion !== "undefined") {
-      badge.textContent = AppVersion.getDisplayBadge();
+      var label = AppVersion.getDisplayBadge();
+      if (badgeText) {
+        badgeText.textContent = label;
+      } else {
+        badge.textContent = label;
+      }
       badge.className = "version-badge " + (AppVersion.isDevelop() ? "channel-develop" : "channel-production");
       badge.title = AppVersion.isDevelop()
         ? "Development Build (v" + AppVersion.version + ", Revision " + AppVersion.revision + ")"
         : "Production Build (v" + AppVersion.version + ")";
+    } else if (badgeText) {
+      badgeText.textContent = "v" + LauncherUpdater.CURRENT_VERSION;
     } else {
       badge.textContent = "v" + LauncherUpdater.CURRENT_VERSION;
     }

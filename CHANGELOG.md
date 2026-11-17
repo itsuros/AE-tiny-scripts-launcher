@@ -11,8 +11,8 @@
 - **CEP 基盤（`CSXS/manifest.xml`, `.debug`, `js/lib/CSInterface.js`, `jsx/hostscript.jsx`）**:
   - Adobe After Effects CEP v11 パネル構成（`--enable-nodejs` / `--mixed-context` 有効）。
   - `.jsx` / `.jsxbin` / インラインスクリプト実行、アクティブコンポ・選択レイヤー・選択プロパティ取得、レイヤープロパティツリー列挙を行う ExtendScript ホストブリッジ。
-  - macOS 開発用シンボリックリンク・`PlayerDebugMode` 設定スクリプト（`scripts/install-dev.sh`）。
-  - Windows 開発用ジャンクション・`PlayerDebugMode` レジストリ設定スクリプト（`scripts/install-dev.ps1`, `scripts/install-dev.bat`）。
+  - macOS 開発用シンボリックリンク・`PlayerDebugMode` 設定・アンインストール（`--uninstall`）スクリプト（`scripts/install-dev.sh`）。
+  - Windows 開発用ジャンクション・`PlayerDebugMode` レジストリ設定・アンインストール（`-Uninstall`）スクリプト（`scripts/install-dev.ps1`, `scripts/install-dev.bat`）。
 - **データストア・GitHub 自動同期（`js/store.js`, `js/github-sync.js`）**:
   - ローカル永続化（`launcher-state.json` + `localStorage` フォールバック）およびスターターアイテム。
   - GitHub レポジトリの再帰走査による自動ダウンロードと拡張子ベースの自動種別判定（`.jsx` / `.jsxbin`, `.expr.js` / `.expr.txt` / `.expr`, `.ffx`）。

@@ -65,6 +65,23 @@ AE-tiny-scripts-launcher/
 3. メニューの **ウィンドウ > エクステンション > AE Tiny Scripts Launcher** からパネルを開きます。
 4. （任意）リモートデバッグを行う場合は Chrome 等で `http://localhost:8088` にアクセスします。
 
+### 開発環境のアンインストール（macOS）
+
+1. **CEP 拡張リンクの解除**:
+   ```bash
+   ./scripts/install-dev.sh --uninstall
+   ```
+   （または `rm "$HOME/Library/Application Support/Adobe/CEP/extensions/com.ae.tinyscripts.launcher"` で直接リンクを削除）
+2. **（任意）ローカル保存データ・キャッシュの削除**:
+   ```bash
+   rm -rf "$HOME/Library/Application Support/AETinyScriptsLauncher"
+   ```
+3. **（任意）`PlayerDebugMode` を元に戻す場合**:
+   他の未署名 CEP 拡張も開発している場合はそのままにしてください。無効化する場合は以下を実行し、After Effects を再起動します。
+   ```bash
+   for ver in 9 10 11 12; do defaults delete com.adobe.CSXS.$ver PlayerDebugMode 2>/dev/null || true; done
+   ```
+
 ---
 
 ## 開発環境のセットアップ（Windows）
@@ -85,10 +102,36 @@ AE-tiny-scripts-launcher/
    このスクリプトにより以下が自動設定されます。
    - リンク先（ジャンクション）: `%APPDATA%\Adobe\CEP\extensions\com.ae.tinyscripts.launcher`
    - レジストリ（`HKEY_CURRENT_USER\Software\Adobe\CSXS.9` 〜 `CSXS.12`）の `PlayerDebugMode` を `"1"` に設定
-   - リンクを解除したい場合は `.\scripts\install-dev.ps1 -Uninstall` を実行します。
 2. **Adobe After Effects** を再起動します。
 3. メニューの **ウィンドウ > エクステンション > AE Tiny Scripts Launcher** からパネルを開きます。
 4. （任意）リモートデバッグを行う場合は Chrome / Edge 等で `http://localhost:8088` にアクセスします。
+
+### 開発環境のアンインストール（Windows）
+
+1. **CEP 拡張ジャンクションの解除**:
+   - PowerShell から実行する場合:
+     ```powershell
+     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-dev.ps1 -Uninstall
+     ```
+   - コマンドプロンプトから実行する場合:
+     ```bat
+     scripts\install-dev.bat -Uninstall
+     ```
+   （手動で削除する場合は、エクスプローラーまたは `rmdir "%APPDATA%\Adobe\CEP\extensions\com.ae.tinyscripts.launcher"` でジャンクションを削除してください）
+2. **（任意）ローカル保存データ・キャッシュの削除**:
+   - PowerShell:
+     ```powershell
+     Remove-Item -LiteralPath "$env:APPDATA\AETinyScriptsLauncher" -Recurse -Force -ErrorAction SilentlyContinue
+     ```
+   - コマンドプロンプト:
+     ```bat
+     rmdir /s /q "%APPDATA%\AETinyScriptsLauncher"
+     ```
+3. **（任意）`PlayerDebugMode` を元に戻す場合**:
+   他の未署名 CEP 拡張も開発している場合はそのままにしてください。無効化する場合は PowerShell で以下を実行し、After Effects を再起動します。
+   ```powershell
+   foreach ($ver in @(9, 10, 11, 12)) { Remove-ItemProperty -Path "HKCU:\Software\Adobe\CSXS.$ver" -Name "PlayerDebugMode" -ErrorAction SilentlyContinue }
+   ```
 
 ### テストの実行
 

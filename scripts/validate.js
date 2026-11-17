@@ -62,7 +62,9 @@ test("macOS and Windows dev setup scripts exist and reference bundle ID", functi
   var bat = fs.readFileSync(path.join(ROOT, "scripts/install-dev.bat"), "utf8");
 
   assert.ok(sh.indexOf("com.ae.tinyscripts.launcher") >= 0);
+  assert.ok(sh.indexOf("--uninstall") >= 0);
   assert.ok(ps1.indexOf("com.ae.tinyscripts.launcher") >= 0);
+  assert.ok(ps1.indexOf("-Uninstall") >= 0);
   assert.ok(ps1.indexOf("PlayerDebugMode") >= 0);
   assert.ok(ps1.indexOf("Junction") >= 0);
   assert.ok(bat.indexOf("install-dev.ps1") >= 0);

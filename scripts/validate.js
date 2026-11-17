@@ -92,11 +92,12 @@ test("index.html, target-picker.html, and help.html reference required assets an
     assert.ok(fs.existsSync(path.join(ROOT, rel)), "Referenced file missing on disk: " + rel);
   });
 
-  ["btn-toggle-search", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon", "item-version"].forEach(
+  ["search-input", "search-field-icon", "btn-reset-card-scale", "btn-cfg-reset-card-scale", "btn-open-help", "version-icon", "item-version"].forEach(
     function (idOrClass) {
       assert.ok(html.indexOf(idOrClass) >= 0, "Missing UI control in index.html: " + idOrClass);
     }
   );
+  assert.ok(html.indexOf("btn-toggle-search") === -1, "Search toggle button should not exist");
 
   var pickerHtml = fs.readFileSync(path.join(ROOT, "target-picker.html"), "utf8");
   ["css/styles.css", "js/lib/CSInterface.js", "js/version.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {

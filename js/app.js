@@ -874,32 +874,15 @@
     $("sort-select").addEventListener("change", function (e) {
       store.updateSettings({ sortBy: e.target.value });
     });
-    $("btn-toggle-search").addEventListener("click", function () {
-      var wrap = $("search-input-wrap");
-      var willShow = wrap.classList.contains("hidden");
-      wrap.classList.toggle("hidden", !willShow);
-      $("btn-toggle-search").setAttribute("aria-expanded", String(willShow));
-      if (willShow) {
-        $("search-input").focus();
-      } else {
-        $("btn-toggle-search").classList.toggle("active", uiState.searchQuery.trim().length > 0);
-      }
-    });
     $("search-input").addEventListener("input", function (e) {
       uiState.searchQuery = e.target.value;
-      $("btn-toggle-search").classList.toggle("active", uiState.searchQuery.trim().length > 0);
       renderItems();
     });
     $("search-input").addEventListener("keydown", function (e) {
-      if (e.key === "Escape") {
-        if ($("search-input").value) {
-          $("search-input").value = "";
-          uiState.searchQuery = "";
-          renderItems();
-        }
-        $("search-input-wrap").classList.add("hidden");
-        $("btn-toggle-search").setAttribute("aria-expanded", "false");
-        $("btn-toggle-search").classList.remove("active");
+      if (e.key === "Escape" && $("search-input").value) {
+        $("search-input").value = "";
+        uiState.searchQuery = "";
+        renderItems();
       }
     });
     $("type-filters").addEventListener("click", function (e) {

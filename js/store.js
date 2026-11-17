@@ -52,6 +52,7 @@
         id: "starter-script-center-anchor",
         name: "Center Anchor Point",
         type: "script",
+        version: "1.0.0",
         source: "manual",
         icon: "anchor",
         color: "#4f8cff",
@@ -86,6 +87,7 @@
         id: "starter-expr-smooth-wiggle",
         name: "Smooth Wiggle (Freq/Amp)",
         type: "expression",
+        version: "1.0.0",
         source: "manual",
         icon: "wave",
         color: "#a855f7",
@@ -108,6 +110,7 @@
         id: "starter-expr-inertial-bounce",
         name: "Inertial Bounce (Keyframes)",
         type: "expression",
+        version: "1.0.0",
         source: "manual",
         icon: "bounce",
         color: "#ec4899",
@@ -142,6 +145,7 @@
         id: "starter-expr-loop-cycle",
         name: "Loop Out Cycle",
         type: "expression",
+        version: "1.0.0",
         source: "manual",
         icon: "loop",
         color: "#10b981",
@@ -159,6 +163,7 @@
         id: "starter-ffx-sample",
         name: "Vignette & Glow Preset (.ffx)",
         type: "ffx",
+        version: "1.0.0",
         source: "manual",
         icon: "sparkles",
         color: "#f59e0b",
@@ -199,7 +204,8 @@
           subPath: "",
           token: "",
           autoSyncOnLaunch: false,
-          lastSyncAt: null
+          lastSyncAt: null,
+          contentVersion: null
         },
         // Self Auto-Update Settings
         launcherUpdateRepo: {
@@ -340,7 +346,8 @@
       id: id,
       name: (itemData.name || "Untitled Item").trim(),
       type: itemData.type || "script", // "script" | "expression" | "ffx"
-      source: itemData.source || "manual", // "manual" | "github"
+      version: String(itemData.version || "").trim(),
+      source: itemData.source || "manual", // "manual" | "github" | "local"
       icon: itemData.icon || (itemData.type === "expression" ? "wave" : itemData.type === "ffx" ? "sparkles" : "bolt"),
       color: itemData.color || (itemData.type === "expression" ? "#a855f7" : itemData.type === "ffx" ? "#f59e0b" : "#4f8cff"),
       customIconPath: itemData.customIconPath || "",
@@ -453,6 +460,9 @@
       if (existing) {
         existing.name = remote.name || existing.name;
         existing.type = remote.type || existing.type;
+        if (remote.version) {
+          existing.version = String(remote.version).trim();
+        }
         existing.description = remote.description !== undefined ? remote.description : existing.description;
         existing.filePath = remote.filePath || existing.filePath;
         existing.code = remote.code !== undefined ? remote.code : existing.code;
@@ -468,6 +478,7 @@
           id: "gh-" + Date.now() + "-" + i,
           name: remote.name,
           type: remote.type || "script",
+          version: String(remote.version || "").trim(),
           source: "github",
           icon: remote.icon || (remote.type === "expression" ? "wave" : remote.type === "ffx" ? "sparkles" : "github"),
           color: remote.color || (remote.type === "expression" ? "#a855f7" : remote.type === "ffx" ? "#f59e0b" : "#38bdf8"),
@@ -529,6 +540,9 @@
       if (existing) {
         existing.name = local.name || existing.name;
         existing.type = local.type || existing.type;
+        if (local.version) {
+          existing.version = String(local.version).trim();
+        }
         existing.description = local.description !== undefined ? local.description : existing.description;
         existing.code = local.code !== undefined ? local.code : existing.code;
         existing.localFolderRoot = local.localFolderRoot || existing.localFolderRoot;
@@ -541,6 +555,7 @@
           id: "loc-" + Date.now() + "-" + i + "-" + Math.random().toString(36).slice(2, 5),
           name: local.name,
           type: local.type || "script",
+          version: String(local.version || "").trim(),
           source: "local",
           icon: local.type === "expression" ? "wave" : local.type === "ffx" ? "sparkles" : "bolt",
           color: local.type === "expression" ? "#a855f7" : local.type === "ffx" ? "#f59e0b" : "#10b981",
@@ -629,6 +644,42 @@
         if (raw) return JSON.parse(raw);
       } catch (e) {
         // ignore
+      }
+    }
+    return null;
+  };
+
+  /**
+   * Extract independent Script/Expression version metadata from file header comments
+   * Supports: @version 1.2.3, Version: v1.2.3, VERSION = "1.2.3"
+   */
+  LauncherStore.parseContentVersion = function (text) {
+    if (!text) return "";
+    var head = String(text).split(/\r?\n/).slice(0, 40).join("\n");
+    var m =
+      head.match(/@version\s+v?([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[0-9A-Za-z.-]+)?)/i) ||
+      head.match(/(?:^|\n)\s*(?:\/\/|\/\*|\*)\s*version\s*:\s*v?([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[0-9A-Za-z.-]+)?)/i) ||
+      head.match(/(?:var|const|let)\s+VERSION\s*=\s*["']v?([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[0-9A-Za-z.-]+)?)["']/);
+    return m ? m[1].trim() : "";
+  };
+
+  /**
+   * Read optional sidecar metadata (<file>.meta.json) for binary .ffx / .jsxbin or scripts
+   */
+  LauncherStore.readSidecarMeta = function (filePath) {
+    if (!hasNode || !fs || !filePath) return null;
+    var candidates = [filePath + ".meta.json"];
+    if (path) {
+      var parsed = path.parse(filePath);
+      candidates.push(path.join(parsed.dir, parsed.name + ".meta.json"));
+    }
+    for (var i = 0; i < candidates.length; i++) {
+      try {
+        if (fs.existsSync(candidates[i])) {
+          return JSON.parse(fs.readFileSync(candidates[i], "utf8"));
+        }
+      } catch (e) {
+        // ignore invalid sidecar JSON
       }
     }
     return null;

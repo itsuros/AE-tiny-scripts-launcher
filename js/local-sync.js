@@ -63,21 +63,35 @@
             ? global.IconResolver.findSiblingImageFile(fullPath)
             : "";
         var code = "";
-        if (itemType === "expression") {
+        var rawTextForMeta = "";
+        if (itemType === "expression" || ent.name.toLowerCase().endsWith(".jsx")) {
           try {
-            code = fs.readFileSync(fullPath, "utf8");
+            rawTextForMeta = fs.readFileSync(fullPath, "utf8");
           } catch (e) {
-            code = "";
+            rawTextForMeta = "";
+          }
+          if (itemType === "expression") {
+            code = rawTextForMeta;
           }
         }
+        var sidecar =
+          global.LauncherStore && typeof global.LauncherStore.readSidecarMeta === "function"
+            ? global.LauncherStore.readSidecarMeta(fullPath)
+            : null;
+        var parsedVersion =
+          (sidecar && sidecar.version) ||
+          (global.LauncherStore && typeof global.LauncherStore.parseContentVersion === "function"
+            ? global.LauncherStore.parseContentVersion(rawTextForMeta)
+            : "");
         results.push({
-          name: cleanName(ent.name),
+          name: (sidecar && sidecar.name) || cleanName(ent.name),
           type: itemType,
+          version: parsedVersion || "",
           filePath: fullPath,
           localFolderRoot: rootFolder,
           customIconPath: siblingIcon,
           code: code,
-          description: "Local: " + fullPath
+          description: (sidecar && sidecar.description) || "Local: " + fullPath
         });
       }
     }

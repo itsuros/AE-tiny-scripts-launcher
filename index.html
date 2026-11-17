@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AE Tiny Scripts Launcher</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="theme-dark">
+  <div id="app" class="app-shell">
+    <!-- Top Header & Primary Actions -->
+    <header class="toolbar">
+      <div class="toolbar-row toolbar-top">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+          <span class="brand-title">Tiny Scripts</span>
+          <span id="version-badge" class="version-badge" title="Current Version">v0.0.0</span>
+          <span id="update-dot" class="update-dot hidden" title="Update available!"></span>
+        </div>
+
+        <div class="toolbar-actions">
+          <button id="btn-sync-github" class="icon-btn" title="Sync Scripts from GitHub">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+          <button id="btn-add-item" class="icon-btn primary" title="Add Script / Expression / FFX">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <div class="view-toggle" role="group" aria-label="View Mode">
+            <button id="btn-view-grid" class="icon-btn active" title="Icon (Grid) View">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button id="btn-view-list" class="icon-btn" title="List View">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <button id="btn-settings" class="icon-btn" title="Settings &amp; Updates">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search + Sort -->
+      <div class="toolbar-row toolbar-search">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="search-input" type="search" placeholder="Search scripts, expressions, ffx..." autocomplete="off" />
+        </div>
+        <select id="sort-select" class="compact-select" title="Sort Order">
+          <option value="custom">Custom Order</option>
+          <option value="name_asc">Name (A-Z)</option>
+          <option value="name_desc">Name (Z-A)</option>
+          <option value="type">By Type</option>
+        </select>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="toolbar-row toolbar-filters">
+        <div class="filter-pills" id="type-filters">
+          <button class="pill active" data-type="all">All</button>
+          <button class="pill" data-type="script">Script</button>
+          <button class="pill" data-type="expression">Expr</button>
+          <button class="pill" data-type="ffx">FFX</button>
+        </div>
+        <button id="btn-reorder-mode" class="pill pill-outline" title="Toggle explicit reorder controls">
+          ⇅ Reorder
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Launcher Area -->
+    <main id="launcher-main" class="launcher-main">
+      <div id="items-container" class="items-container view-grid size-medium"></div>
+      <div id="empty-state" class="empty-state hidden">
+        <p>No items match your current filter.</p>
+        <button id="btn-empty-add" class="btn btn-primary btn-sm">+ Add Item</button>
+      </div>
+    </main>
+
+    <!-- Status / Toast Footer -->
+    <footer class="status-bar">
+      <span id="status-text" class="status-text">Ready</span>
+      <span id="item-count" class="status-count">0 items</span>
+    </footer>
+  </div>
+
+  <!-- ==================== MODAL: Add / Edit Item ==================== -->
+  <div id="modal-item" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-item-title">Add Item</h2>
+        <button class="icon-btn modal-close" data-close="modal-item" aria-label="Close">&times;</button>
+      </div>
+      <form id="form-item" class="modal-body">
+        <input type="hidden" id="item-id" />
+
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="item-type">Type</label>
+            <select id="item-type" required>
+              <option value="script">Script (.jsx / .jsxbin)</option>
+              <option value="expression">Expression</option>
+              <option value="ffx">Animation Preset (.ffx)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="item-color">Accent Color</label>
+            <input id="item-color" type="color" value="#4f8cff" />
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label for="item-name">Display Name</label>
+            <input id="item-name" type="text" placeholder="e.g. Center Anchor Point" required />
+          </div>
+          <div class="form-group">
+            <label for="item-icon">Icon</label>
+            <select id="item-icon">
+              <option value="bolt">Bolt (Script)</option>
+              <option value="anchor">Anchor</option>
+              <option value="wave">Wave (Expression)</option>
+              <option value="bounce">Bounce</option>
+              <option value="loop">Loop</option>
+              <option value="sparkles">Sparkles (FFX)</option>
+              <option value="layers">Layers</option>
+              <option value="code">Code</option>
+              <option value="github">GitHub</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="item-description">Description</label>
+          <input id="item-description" type="text" placeholder="Short description of what this tool does" />
+        </div>
+
+        <div class="form-group">
+          <label for="item-filepath">File Path <span class="hint">(optional for inline Script/Expression; required for .ffx / .jsxbin)</span></label>
+          <div class="input-with-btn">
+            <input id="item-filepath" type="text" placeholder="/path/to/script.jsx or preset.ffx" />
+            <button type="button" id="btn-browse-file" class="btn btn-secondary btn-sm">Browse</button>
+          </div>
+          <input id="hidden-file-picker" type="file" class="hidden" accept=".jsx,.jsxbin,.ffx,.js,.txt,.expr" />
+        </div>
+
+        <div class="form-group" id="group-item-code">
+          <label for="item-code">Inline Code <span class="hint">(used when File Path is empty, or for Expression preview)</span></label>
+          <textarea id="item-code" rows="5" placeholder="// Paste ExtendScript or Expression code here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="item-tags">Tags <span class="hint">(comma separated)</span></label>
+          <input id="item-tags" type="text" placeholder="transform, utility, motion" />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-item">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: Expression Target & Options ==================== -->
+  <div id="modal-expression" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2 id="expr-modal-title">Apply Expression</h2>
+        <button class="icon-btn modal-close" data-close="modal-expression" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="context-banner">
+          <div>
+            <strong>Comp:</strong> <span id="expr-comp-name">Checking After Effects...</span>
+          </div>
+          <button type="button" id="btn-expr-refresh" class="btn btn-secondary btn-xs">Refresh AE Selection</button>
+        </div>
+
+        <div class="form-group">
+          <label>Target Selection Mode</label>
+          <div class="radio-tabs" id="expr-target-modes">
+            <label class="radio-tab">
+              <input type="radio" name="exprTargetMode" value="selected_props" checked />
+              <span>Selected Properties</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="exprTargetMode" value="common_preset" />
+              <span>Common Property</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="exprTargetMode" value="specific_paths" />
+              <span>Layer Property Tree</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Panel 1: Currently Selected Properties -->
+        <div id="expr-panel-selected" class="target-panel">
+          <div class="panel-subtitle">Currently selected expression-capable properties in AE timeline:</div>
+          <div id="expr-selected-props-list" class="checklist-box"></div>
+        </div>
+
+        <!-- Panel 2: Common Property Preset + Layer Checklist -->
+        <div id="expr-panel-common" class="target-panel hidden">
+          <div class="form-group">
+            <label for="expr-common-preset">Target Property Preset</label>
+            <select id="expr-common-preset">
+              <option value="transform.position">Transform &gt; Position</option>
+              <option value="transform.scale">Transform &gt; Scale</option>
+              <option value="transform.rotation">Transform &gt; Rotation / Z Rotation</option>
+              <option value="transform.opacity">Transform &gt; Opacity</option>
+              <option value="transform.anchorPoint">Transform &gt; Anchor Point</option>
+              <option value="timeRemap">Layer &gt; Time Remap (auto-enables)</option>
+            </select>
+          </div>
+          <div class="panel-subtitle">Target Layers (leave all unchecked to apply to AE selected layers):</div>
+          <div id="expr-common-layers-list" class="checklist-box"></div>
+        </div>
+
+        <!-- Panel 3: Layer Property Tree Browser -->
+        <div id="expr-panel-tree" class="target-panel hidden">
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="expr-tree-layer">Layer</label>
+              <select id="expr-tree-layer"></select>
+            </div>
+            <div class="form-group">
+              <label for="expr-tree-search">Filter Property</label>
+              <input id="expr-tree-search" type="search" placeholder="e.g. Position, Blur, Color" />
+            </div>
+          </div>
+          <div id="expr-tree-props-list" class="checklist-box"></div>
+        </div>
+
+        <!-- Detailed Expression Options -->
+        <div class="options-card">
+          <div class="options-title">Application Options</div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="expr-apply-mode">Expression Mode</label>
+              <select id="expr-apply-mode">
+                <option value="replace">Replace existing expression</option>
+                <option value="append">Append below existing expression</option>
+                <option value="prepend">Prepend above existing expression</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="expr-keyframe-mode">Keyframe Handling</label>
+              <select id="expr-keyframe-mode">
+                <option value="keep">Keep existing keyframes</option>
+                <option value="freeze_current">Freeze current value &amp; remove keys</option>
+                <option value="clear_all">Clear all keyframes</option>
+              </select>
+            </div>
+          </div>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="expr-enable-flag" checked />
+            <span>Enable expression immediately after applying</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="expr-code-preview">Expression Code <span class="hint">(editable before apply)</span></label>
+          <textarea id="expr-code-preview" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-expression">Cancel</button>
+        <button type="button" id="btn-expr-apply" class="btn btn-primary">Apply Expression</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: FFX Target & Options ==================== -->
+  <div id="modal-ffx" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2 id="ffx-modal-title">Apply Animation Preset (.ffx)</h2>
+        <button class="icon-btn modal-close" data-close="modal-ffx" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="context-banner">
+          <div class="form-group inline-comp-select">
+            <label for="ffx-comp-select">Target Comp:</label>
+            <select id="ffx-comp-select"></select>
+          </div>
+          <button type="button" id="btn-ffx-refresh" class="btn btn-secondary btn-xs">Refresh AE</button>
+        </div>
+
+        <div class="form-group">
+          <label>Target Layer Destination</label>
+          <div class="radio-grid" id="ffx-target-modes">
+            <label class="radio-tab">
+              <input type="radio" name="ffxTargetMode" value="selected_layers" checked />
+              <span>AE Selected Layers</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="ffxTargetMode" value="checked_layers" />
+              <span>Pick Layers Below</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="ffxTargetMode" value="new_adjustment" />
+              <span>+ New Adjustment Layer</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="ffxTargetMode" value="new_solid" />
+              <span>+ New Solid Layer</span>
+            </label>
+            <label class="radio-tab">
+              <input type="radio" name="ffxTargetMode" value="new_null" />
+              <span>+ New Null Object</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="ffx-layer-checklist-wrap" class="form-group">
+          <div class="panel-subtitle" id="ffx-layer-subtitle">Layers in Composition:</div>
+          <div id="ffx-layers-list" class="checklist-box"></div>
+        </div>
+
+        <div class="options-card">
+          <div class="options-title">Preset Application Options</div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="ffx-time-mode">Keyframe / Apply Time Anchor</label>
+              <select id="ffx-time-mode">
+                <option value="current_time">Current Playhead Time</option>
+                <option value="layer_in_point">Each Layer's In-Point</option>
+                <option value="comp_start">Composition Start (0:00)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ffx-keyframe-mode">Existing Transform Keys</label>
+              <select id="ffx-keyframe-mode">
+                <option value="keep">Keep existing transform keyframes</option>
+                <option value="clear_transform_keys">Clear transform keyframes first</option>
+              </select>
+            </div>
+          </div>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="ffx-clear-effects" />
+            <span>Remove existing Effects on target layer(s) before applying preset</span>
+          </label>
+        </div>
+
+        <div class="file-path-preview">
+          <strong>FFX File:</strong> <span id="ffx-file-display"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-ffx">Cancel</button>
+        <button type="button" id="btn-ffx-apply" class="btn btn-primary">Apply FFX Preset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: Settings & Auto-Update ==================== -->
+  <div id="modal-settings" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2>Settings &amp; Updates</h2>
+        <button class="icon-btn modal-close" data-close="modal-settings" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Section 1: GitHub Scripts Repository -->
+        <section class="settings-section">
+          <h3>GitHub Scripts Repository Sync</h3>
+          <p class="section-desc">Automatically download <code>.jsx</code>, <code>.jsxbin</code>, <code>.expr.js</code>, <code>.expr</code>, and <code>.ffx</code> files from a GitHub repository.</p>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="cfg-scripts-repo">Repository (<code>owner/repo</code> or URL)</label>
+              <input id="cfg-scripts-repo" type="text" placeholder="username/ae-tiny-scripts" />
+            </div>
+            <div class="form-group">
+              <label for="cfg-scripts-branch">Branch</label>
+              <input id="cfg-scripts-branch" type="text" placeholder="main" />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="cfg-scripts-subpath">Subdirectory <span class="hint">(optional)</span></label>
+              <input id="cfg-scripts-subpath" type="text" placeholder="scripts" />
+            </div>
+            <div class="form-group">
+              <label for="cfg-github-token">GitHub Token <span class="hint">(optional, for private repos)</span></label>
+              <input id="cfg-github-token" type="password" placeholder="ghp_..." />
+            </div>
+          </div>
+          <div class="form-row two-col">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-scripts-autosync" />
+              <span>Auto-sync scripts on panel launch</span>
+            </label>
+            <label class="checkbox-inline">
+              <input type="checkbox" id="cfg-scripts-prune" />
+              <span>Remove synced items deleted from remote</span>
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button type="button" id="btn-settings-sync-now" class="btn btn-secondary btn-sm">Sync Scripts Now</button>
+            <span id="cfg-last-sync" class="hint"></span>
+          </div>
+        </section>
+
+        <!-- Section 2: Self Auto-Update -->
+        <section class="settings-section">
+          <h3>Launcher Self-Update (GitHub Releases)</h3>
+          <p class="section-desc">Current Version: <strong id="cfg-current-version">0.0.0</strong> (Pre-release SemVer)</p>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="cfg-update-repo">Launcher Release Repo (<code>owner/repo</code>)</label>
+              <input id="cfg-update-repo" type="text" placeholder="username/AE-tiny-scripts-launcher" />
+            </div>
+            <div class="form-group flex-end">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="cfg-update-autocheck" />
+                <span>Check for updates on launch</span>
+              </label>
+            </div>
+          </div>
+          <div class="inline-actions">
+            <button type="button" id="btn-check-update" class="btn btn-secondary btn-sm">Check for Updates</button>
+            <button type="button" id="btn-install-update" class="btn btn-primary btn-sm hidden">Download &amp; Install Update</button>
+          </div>
+          <div id="update-status-box" class="update-status-box hidden"></div>
+        </section>
+
+        <!-- Section 3: UI Preferences -->
+        <section class="settings-section">
+          <h3>Appearance</h3>
+          <div class="form-row two-col">
+            <div class="form-group">
+              <label for="cfg-icon-size">Grid Icon Size</label>
+              <select id="cfg-icon-size">
+                <option value="small">Small (Compact)</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cfg-view-mode">Default View Mode</label>
+              <select id="cfg-view-mode">
+                <option value="grid">Icon (Grid) View</option>
+                <option value="list">List View</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-settings">Cancel</button>
+        <button type="button" id="btn-save-settings" class="btn btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/lib/CSInterface.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/github-sync.js"></script>
+  <script src="js/updater.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

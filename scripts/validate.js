@@ -35,6 +35,7 @@ async function runAllTests() {
 }
 
 // Load modules in global context
+require(path.join(ROOT, "js/ae-theme.js"));
 require(path.join(ROOT, "js/version.js"));
 require(path.join(ROOT, "js/icon-resolver.js"));
 require(path.join(ROOT, "js/store.js"));
@@ -79,6 +80,7 @@ test("index.html, target-picker.html, and help.html reference required assets an
   [
     "css/styles.css",
     "js/lib/CSInterface.js",
+    "js/ae-theme.js",
     "js/version.js",
     "js/icon-resolver.js",
     "js/store.js",
@@ -100,12 +102,14 @@ test("index.html, target-picker.html, and help.html reference required assets an
   assert.ok(html.indexOf("btn-toggle-search") === -1, "Search toggle button should not exist");
 
   var pickerHtml = fs.readFileSync(path.join(ROOT, "target-picker.html"), "utf8");
-  ["css/styles.css", "js/lib/CSInterface.js", "js/version.js", "js/store.js", "js/target-picker.js"].forEach(function (rel) {
-    assert.ok(pickerHtml.indexOf(rel) >= 0, "Missing reference in target-picker.html: " + rel);
-  });
+  ["css/styles.css", "js/lib/CSInterface.js", "js/ae-theme.js", "js/version.js", "js/store.js", "js/target-picker.js"].forEach(
+    function (rel) {
+      assert.ok(pickerHtml.indexOf(rel) >= 0, "Missing reference in target-picker.html: " + rel);
+    }
+  );
 
   var helpHtml = fs.readFileSync(path.join(ROOT, "help.html"), "utf8");
-  ["css/styles.css", "js/lib/CSInterface.js", "js/version.js"].forEach(function (rel) {
+  ["css/styles.css", "js/lib/CSInterface.js", "js/ae-theme.js", "js/version.js"].forEach(function (rel) {
     assert.ok(helpHtml.indexOf(rel) >= 0, "Missing reference in help.html: " + rel);
   });
 
@@ -136,6 +140,7 @@ test("macOS and Windows dev setup scripts exist and reference bundle ID", functi
 test("JS and ExtendScript files parse cleanly without syntax errors", function () {
   var files = [
     "js/lib/CSInterface.js",
+    "js/ae-theme.js",
     "js/version.js",
     "js/icon-resolver.js",
     "js/store.js",
@@ -436,6 +441,33 @@ test("LocalSync.scanLocalTinyScriptsRepo loads dedicated local AE-tiny-scripts w
     .finally(function () {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
+});
+
+test("AETheme computes brightness-adaptive native tokens across dark, mid-gray, and light AE skins", function () {
+  var darkTokens = global.AETheme.computeThemeTokens({
+    panelBackgroundColor: { color: { red: 29, green: 29, blue: 29 } },
+    systemHighlightColor: { color: { red: 45, green: 140, blue: 235 } },
+    baseFontFamily: "Tahoma",
+    baseFontSize: 11
+  });
+  assert.strictEqual(darkTokens.isLight, false);
+  assert.strictEqual(darkTokens["--bg-app"], "rgb(29, 29, 29)");
+  assert.strictEqual(darkTokens["--accent"], "rgb(45, 140, 235)");
+  assert.strictEqual(darkTokens["--font-size-base"], "11px");
+  assert.ok(darkTokens["--font-family"].indexOf("Tahoma") >= 0);
+
+  var midGrayTokens = global.AETheme.computeThemeTokens({
+    panelBackgroundColor: { color: { red: 105, green: 105, blue: 105 } }
+  });
+  assert.strictEqual(midGrayTokens.isLight, false);
+  assert.strictEqual(midGrayTokens["--text-primary"], "#ebebeb");
+
+  var lightTokens = global.AETheme.computeThemeTokens({
+    panelBackgroundColor: { color: { red: 224, green: 224, blue: 224 } }
+  });
+  assert.strictEqual(lightTokens.isLight, true);
+  assert.strictEqual(lightTokens["--text-primary"], "#1b1b1b");
+  assert.strictEqual(lightTokens["--bg-app"], "rgb(224, 224, 224)");
 });
 
 runAllTests();

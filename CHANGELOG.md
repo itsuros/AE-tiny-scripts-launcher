@@ -36,5 +36,6 @@
 - **開発版リビジョン管理 & 本番/開発チャネル識別（`version.json`, `js/version.js`, `scripts/bump-revision.js`, `.githooks/pre-commit`）**:
   - `develop` 版と `production` 版のチャネル識別を追加し、開発版では UI ヘッダ（`DEV v0.0.0 (rev.N)`）・外部適用先ウィンドウ（`DEV rN`）・設定画面にリビジョン番号を表示するよう変更。
   - コミットごとに `revision` を自動で 1 つずつ繰り上げるスクリプトと Git `pre-commit` フックを追加。
-- **検証・ドキュメント（`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `LICENSE`）**:
+- **検証・ドキュメント（`scripts/validate.js`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `docs/uxp-migration-notes.md`, `LICENSE`）**:
   - MIT ライセンス、日本語ドキュメント、開発・Git 運用規約、および Node.js 検証テストスイート。
+  - Adobe による CEP から UXP への移行発表（2026-11-11）および After Effects UXP 対応スケジュール（2026-09-24 案内）に基づく、将来の fork・UXP 版リファクタリング計画を記録。

@@ -49,6 +49,8 @@ AE-tiny-scripts-launcher/
 │   ├── store.js              # ローカル永続化（JSON / localStorage）＆並び順管理
 │   ├── target-picker.js      # Expression / FFX 適用先セレクタ共通コントローラ
 │   └── updater.js            # SemVer 対応 GitHub Releases 自動アップデータ
+├── docs/
+│   └── uxp-migration-notes.md # UXP プラグイン移行方針・スケジュール記録
 ├── jsx/
 │   └── hostscript.jsx        # After Effects ExtendScript ホストブリッジ
 ├── scripts/
@@ -204,6 +206,20 @@ npm test
   2. `develop` から `main` へ Pull Request を作成してマージします。
   3. `main` にリリースタグ（例: `v0.1.0` / `v1.0.0`）を打ち、GitHub Release を公開します。
   4. リリース後、`develop` 側で `node scripts/bump-revision.js --channel develop` を実行して開発チャネルへ戻します。
+
+---
+
+## 今後の計画・UXP プラグインへの移行方針（ロードマップ）
+
+- **背景・公式スケジュール**:
+  - 2026年9月24日の Adobe 発表にて、After Effects の UXP 対応スケジュールとして `After Effects: Public beta UXP plugins by November 2026.` が案内されました。
+  - 2026年11月11日には、Adobe より **CEP から UXP プラグインへの移行** が正式に発表されました。
+- **移行方針**:
+  - After Effects 本体の UXP 対応が完了した後、**本リポジトリを fork して UXP プラグイン版へリファクタリングする作業**を実施します（それまでは本リポジトリを CEP 版として維持します）。
+  - 移行時の技術的検討メモは [docs/uxp-migration-notes.md](docs/uxp-migration-notes.md) に記録しています。
+- **参考 URL**:
+  - https://blog.developer.adobe.com/en/publish/2026/09/investing-in-the-future-of-creative-cloud-extensibility-uxp-comes-to-our-flagship-applications
+  - https://helpx.adobe.com/jp/creative-cloud/apps/integration-with-other-apps/manage-plugins/cep-uxp-plugin-transition.html
 
 ---
 

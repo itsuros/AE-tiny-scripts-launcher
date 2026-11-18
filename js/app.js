@@ -49,30 +49,6 @@
     el.className = "status-text" + (kind ? " " + kind : "");
   }
 
-  // ==================== CEP Theme Synchronization ====================
-  function applyHostTheme() {
-    try {
-      var env = csInterface.getHostEnvironment();
-      var bg = env && env.appSkinInfo && env.appSkinInfo.panelBackgroundColor && env.appSkinInfo.panelBackgroundColor.color;
-      if (bg) {
-        var lum = 0.2126 * bg.red + 0.7152 * bg.green + 0.0722 * bg.blue;
-        if (lum > 140) {
-          document.body.classList.remove("theme-dark");
-          document.body.classList.add("theme-light");
-        } else {
-          document.body.classList.remove("theme-light");
-          document.body.classList.add("theme-dark");
-        }
-        document.documentElement.style.setProperty(
-          "--bg-app",
-          "rgb(" + Math.round(bg.red) + "," + Math.round(bg.green) + "," + Math.round(bg.blue) + ")"
-        );
-      }
-    } catch (e) {
-      // ignore if unavailable
-    }
-  }
-
   // ==================== ExtendScript Bridge Helpers ====================
   function evalHostFunction(fnCall) {
     return new Promise(function (resolve) {
@@ -1155,8 +1131,9 @@
   }
 
   function init() {
-    applyHostTheme();
-    csInterface.addEventListener(CSInterface.THEME_COLOR_CHANGED_EVENT, applyHostTheme);
+    if (typeof AETheme !== "undefined") {
+      AETheme.init(csInterface);
+    }
     csInterface.addEventListener("com.ae.tinyscripts.launcher.TARGET_RESULT", function (event) {
       try {
         var res = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
